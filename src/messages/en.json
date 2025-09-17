@@ -1,0 +1,12 @@
+{
+  "Navbar": {
+    "home": "Home",
+    "about": "About Me",
+    "projects": "Projects",
+    "publications": "Publications",
+    "contact": "Contact Me"
+  },
+  "Home": {
+    "welcome": "Welcome to my website"
+  }
+}

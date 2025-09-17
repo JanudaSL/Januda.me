@@ -1,0 +1,26 @@
+{
+  "Navbar": {
+    "home": "Accueil",
+    "about": "À propos",
+    "contact": "Contact"
+  },
+  "Intro": {
+    "title": "Bienvenue sur mon site web",
+    "subtitle": "Je suis Januda, développeur et voyageur"
+  },
+  "About": {
+    "title": "À propos de moi",
+    "description": "Je suis un passionné de technologie et d'exploration."
+  },
+  "Skill": {
+    "title": "Compétences",
+    "description": "Langages et technologies que j'utilise"
+  },
+  "Offer": {
+    "title": "Ce que j'offre",
+    "description": "Services pour vos projets"
+  },
+  "Footer": {
+    "rights": "Tous droits réservés © Januda"
+  }
+}
