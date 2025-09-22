@@ -1,36 +1,40 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Plus, X, User, Building, Mail, MessageSquare } from 'lucide-react';
 
 const TestimonialsCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-
-  const testimonials = [
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [organization, setOrganization] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [testimonialsList, setTestimonialsList] = useState([
     {
       id: 1,
-      name: "Naleen Wijethunga",
-      role: "Research Assistant at the Department of Agriculture",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&auto=format",
+      name: "Achala Athukorala",
+      role: "Research Engineer,Singapore University of Technology and Design (SUTD)",
+      image: "https://ik.imagekit.io/9dtagplxz/WhatsApp%20Image%202025-09-19%20at%2022.50.30_6a4c9f03.jpg?updatedAt=1758302547543",
       rating: 4,
       text: "By introducing AI-based innovations, AiGROW helps overcome labor shortages while increasing youth engagement in farming. Their technologies make agriculture more appealing and accessible to a new generation of farmers, fostering long-term sustainability in the sector."
     },
     {
       id: 2,
-      name: "Buddhika Jeewantha",
-      role: "From Polhena Estate",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format",
+      name: "Chathura Madushan",
+      role: "University Of Moratuwa",
+      image: "https://ik.imagekit.io/9dtagplxz/FB_IMG_17583057470533329.jpg?updatedAt=1758305850993",
       rating: 5,
-      text: "These systems conserve water and energy while offering climate sensors to monitor environmental changes. iGROW has revolutionized agriculture by enabling smarter, more efficient farming practices."
+      text: "Collaborating with Januda has always been inspiring. He brings together strong problem-solving skills, creativity, and a genuine passion for achieving excellence. His approachable nature and willingness to support others make him not just a reliable teammate, but also a motivating presence in any environment."
     },
     {
       id: 3,
-      name: "Samantha Silva",
-      role: "Tea Plantation Owner",
-      image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=face&auto=format",
+      name: "Ranidu Rochitha Pradeeshan",
+      role: "WEBEATS Admin , University Of Ruhuna",
+      image: "https://ik.imagekit.io/9dtagplxz/rni.png?updatedAt=1758306591726",
       rating: 5,
-      text: "AiGROW's smart irrigation system has increased our tea yield by 35% while reducing water consumption. The AI predictions help us make better decisions about harvesting and pest control."
+      text: "Januda did an excellent job creating the WEBEATS website. His creativity, technical skills, and attention to detail made the site both functional and visually appealing. He handled the project with professionalism and dedication, ensuring every part was done to the highest standard. I highly recommend Januda for his outstanding work."
     },
     {
       id: 4,
@@ -40,39 +44,172 @@ const TestimonialsCarousel = () => {
       rating: 4,
       text: "The environmental monitoring features are exceptional. We can track soil health, weather patterns, and crop growth in real-time. It's transformed how we approach sustainable farming."
     }
-  ];
+  ]);
+
+   const API_URL = "https://feedbk-1.onrender.com/api/recommendations";
+
+  // Load Google Sign-In script and initialize
+  useEffect(() => {
+    const loadGoogleScript = () => {
+      // Check if script already exists
+      if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
+        initializeGoogle();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        initializeGoogle();
+      };
+
+      script.onerror = () => {
+        console.log('Google Sign-In script failed to load');
+      };
+
+      document.head.appendChild(script);
+    };
+
+    const initializeGoogle = () => {
+      // Make handleCredentialResponse globally available
+      window.handleCredentialResponse = handleCredentialResponse;
+      
+      // Initialize Google Sign-In
+      if (window.google && window.google.accounts) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: "1081185265333-j6872g780gpe983c0hi9ac3nt858ksmp.apps.googleusercontent.com",
+            callback: handleCredentialResponse,
+            auto_prompt: false,
+            cancel_on_tap_outside: false,
+            use_fedcm_for_prompt: false,
+            ux_mode: 'popup',
+            context: 'signin'
+          });
+        } catch (error) {
+          console.log('Google Sign-In initialization error:', error);
+        }
+      }
+    };
+
+    loadGoogleScript();
+    loadRecommendations();
+  }, []);
+
+  // Google Sign-In callback function
+  const handleCredentialResponse = (response) => {
+    try {
+      // Decode the Google JWT token
+      const data = JSON.parse(atob(response.credential.split(".")[1]));
+      
+      const user = {
+        name: data.name,
+        email: data.email,
+        avatarUrl: data.picture
+      };
+      
+      setLoggedInUser(user);
+    } catch (error) {
+      console.error('Error parsing Google credential:', error);
+      alert('Error signing in with Google. Please try again.');
+    }
+  };
+
+  // Handle "Your Feedback" button click
+  const handleYourFeedbackClick = () => {
+    setShowFeedbackForm(true);
+    
+    // Small delay to ensure modal is rendered, then render Google button
+    setTimeout(() => {
+      if (window.google && window.google.accounts && !loggedInUser) {
+        const signInContainer = document.getElementById('google-signin-container');
+        if (signInContainer) {
+          signInContainer.innerHTML = '';
+          
+          try {
+            window.google.accounts.id.renderButton(signInContainer, {
+              theme: 'outline',
+              size: 'large',
+              text: 'signin_with',
+              width: '320',
+              logo_alignment: 'left',
+              shape: 'rectangular'
+            });
+          } catch (error) {
+            console.log('Error rendering Google button:', error);
+          }
+        }
+      }
+    }, 100);
+  };
+
+  // Load recommendations from API
+  const loadRecommendations = async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (response.ok) {
+        const data = await response.json();
+        const apiTestimonials = data.map(rec => ({
+          id: `api-${rec.id || Math.random()}`,
+          name: rec.fullName,
+          role: rec.organization || "Valued Client",
+          image: rec.avatarUrl || generateGravatarUrl(rec.email),
+          rating: 5,
+          text: rec.feedback
+        }));
+        
+        setTestimonialsList(prev => {
+          const existingIds = prev.map(t => t.id);
+          const newTestimonials = apiTestimonials.filter(t => !existingIds.includes(t.id));
+          return [...prev, ...newTestimonials];
+        });
+      }
+    } catch (error) {
+      console.error('Error loading recommendations:', error);
+    }
+  };
+
+  // Generate Gravatar URL
+  const generateGravatarUrl = (email) => {
+    let hash = 0;
+    for (let i = 0; i < email.length; i++) {
+      const char = email.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return `https://www.gravatar.com/avatar/${Math.abs(hash)}?d=identicon&s=80`;
+  };
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => {
-      // Linked list circular navigation
       const nextIndex = prevIndex + 1;
-      return nextIndex >= testimonials.length - 1 ? 0 : nextIndex;
+      return nextIndex >= testimonialsList.length - 1 ? 0 : nextIndex;
     });
   };
 
   const prevSlide = () => {
     setCurrentIndex((prevIndex) => {
-      // Linked list circular navigation
       const prevIdx = prevIndex - 1;
-      return prevIdx < 0 ? testimonials.length - 2 : prevIdx;
+      return prevIdx < 0 ? testimonialsList.length - 2 : prevIdx;
     });
   };
 
-  // Auto-scroll effect
   useEffect(() => {
-    if (!isPaused) {
+    if (!isPaused && !showFeedbackForm) {
       const interval = setInterval(() => {
         nextSlide();
-      }, 4000); // Change every 4 seconds
-
+      }, 1000);
       return () => clearInterval(interval);
     }
-  }, [currentIndex, isPaused]);
+  }, [currentIndex, isPaused, showFeedbackForm]);
 
   const handleMouseEnter = () => setIsPaused(true);
   const handleMouseLeave = () => setIsPaused(false);
 
-  const renderStars = (rating: number) => {
+  const renderStars = (rating) => {
     return [...Array(5)].map((_, index) => (
       <Star
         key={index}
@@ -83,18 +220,78 @@ const TestimonialsCarousel = () => {
     ));
   };
 
+  // Submit feedback to API
+  const handleSubmitFeedback = async () => {
+    if (!loggedInUser || !feedbackText.trim()) return;
+
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json" 
+        },
+        body: JSON.stringify({
+          fullName: loggedInUser.name,
+          email: loggedInUser.email,
+          avatarUrl: loggedInUser.avatarUrl,
+          organization: organization || "Valued Client",
+          feedback: feedbackText.trim()
+        })
+      });
+
+      if (response.ok) {
+        const newTestimonial = {
+          id: `new-${Date.now()}`,
+          name: loggedInUser.name,
+          role: organization || "Valued Client",
+          image: loggedInUser.avatarUrl,
+          rating: 5,
+          text: feedbackText.trim()
+        };
+
+        setTestimonialsList(prev => [...prev, newTestimonial]);
+        
+        setFeedbackText('');
+        setOrganization('');
+        setShowFeedbackForm(false);
+        setLoggedInUser(null);
+        
+        alert('Thank you for your feedback! It has been submitted successfully.');
+        
+        setTimeout(() => {
+          loadRecommendations();
+        }, 1000);
+      } else {
+        throw new Error('Failed to submit feedback');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert('Error submitting feedback. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseFeedback = () => {
+    setShowFeedbackForm(false);
+    setFeedbackText('');
+    setOrganization('');
+    setLoggedInUser(null);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-16 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-16 px-4 relative">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 relative overflow-hidden">
-          {/* Decorative gradient bar */}
           <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-green-400 via-green-500 to-green-600"></div>
           
           <div className="flex flex-col lg:flex-row gap-12">
             {/* Left Section */}
             <div className="lg:w-1/3 flex flex-col justify-center">
               <p className="text-orange-500 font-semibold text-lg mb-4 tracking-wide">
-                Our Testimonials
+                My Testimonials
               </p>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-8">
                 What They're
@@ -106,15 +303,24 @@ const TestimonialsCarousel = () => {
               <p className="text-gray-600 text-lg leading-relaxed mb-8">
                 Authentic stories and endorsements from satisfied clients.
               </p>
-              <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg w-fit">
-                About Us
-              </button>
+              <div className="flex gap-4">
+                <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg w-fit">
+                  About Me
+                </button>
+                <button 
+                  onClick={handleYourFeedbackClick}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Your Feedback
+                </button>
+              </div>
             </div>
 
             {/* Right Section - Testimonials */}
             <div className="lg:w-2/3 relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
               <div className="flex gap-6 overflow-hidden">
-                {testimonials.slice(currentIndex, currentIndex + 2).map((testimonial, index) => (
+                {testimonialsList.slice(currentIndex, currentIndex + 2).map((testimonial, index) => (
                   <div
                     key={testimonial.id}
                     className="flex-1 bg-gray-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
@@ -127,13 +333,17 @@ const TestimonialsCarousel = () => {
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div>
-                        <h3 className="font-bold text-xl text-gray-900">
-                          {testimonial.name}
-                        </h3>
-                        <p className="text-gray-600 text-sm">
-                          {testimonial.role}
-                        </p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <User className="w-4 h-4 text-green-600" />
+                          <h3 className="font-bold text-xl text-gray-900">
+                            {testimonial.name}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600 text-sm">
+                          <Building className="w-4 h-4 text-green-600" />
+                          <p>{testimonial.role}</p>
+                        </div>
                       </div>
                     </div>
                     
@@ -166,7 +376,7 @@ const TestimonialsCarousel = () => {
               
               {/* Pagination Dots */}
               <div className="flex justify-center mt-6 gap-2">
-                {Array.from({ length: testimonials.length - 1 }, (_, index) => (
+                {Array.from({ length: testimonialsList.length - 1 }, (_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentIndex(index)}
@@ -182,6 +392,185 @@ const TestimonialsCarousel = () => {
           </div>
         </div>
       </div>
+
+      {/* Feedback Form Modal with Improved Design */}
+      {showFeedbackForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg transform transition-all duration-300 scale-100 border border-gray-100 max-h-[90vh] overflow-y-auto">
+            <div className="p-8">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Share Your Feedback</h2>
+                </div>
+                <button
+                  onClick={handleCloseFeedback}
+                  className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 hover:scale-105"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              {!loggedInUser ? (
+                <div className="text-center">
+                  {/* Sign-in Instructions */}
+                  <div className="mb-8">
+                    <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <User className="w-10 h-10 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome!</h3>
+                    <p className="text-gray-600 mb-6 leading-relaxed">
+                      Please sign in with your Google account to share your valuable feedback with us.
+                    </p>
+                  </div>
+
+                  {/* Google Sign-In Button Container */}
+                  <div className="mb-6">
+                    <div id="google-signin-container" className="flex justify-center"></div>
+                  </div>
+
+                  {/* Security Note */}
+                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <div className="text-sm text-blue-700 flex items-center gap-2">
+                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                      We use Google Sign-In to ensure authentic feedback and protect your privacy.
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* User Profile Section */}
+                  <div className="mb-8">
+                    <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 border border-green-200">
+                      <div className="flex items-center mb-4">
+                        <div className="relative">
+                          <img
+                            src={loggedInUser.avatarUrl}
+                            alt={loggedInUser.name}
+                            className="w-16 h-16 rounded-full border-4 border-white shadow-lg"
+                            onError={(e) => {
+                              e.target.src = generateGravatarUrl(loggedInUser.email);
+                            }}
+                          />
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                            <User className="w-3 h-3 text-white" />
+                          </div>
+                        </div>
+                        <div className="ml-4 flex-1">
+                          <h3 className="font-bold text-gray-900 text-lg">{loggedInUser.name}</h3>
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Mail className="w-4 h-4 text-green-600" />
+                            <p className="text-sm">{loggedInUser.email}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-white/80 backdrop-blur rounded-xl p-3">
+                        <p className="text-sm text-green-700 font-medium">✓ Authenticated with Google</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Form Fields */}
+                  <div className="space-y-6">
+                    {/* Full Name Field (Auto-filled) */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        <User className="w-4 h-4 inline mr-2 text-green-600" />
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        value={loggedInUser.name}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed"
+                      />
+                    </div>
+
+                    {/* Email Field (Auto-filled) */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        <Mail className="w-4 h-4 inline mr-2 text-green-600" />
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        value={loggedInUser.email}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed"
+                      />
+                    </div>
+
+                    {/* Organization Field */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        <Building className="w-4 h-4 inline mr-2 text-green-600" />
+                        Organization <span className="text-gray-400 font-normal">(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={organization}
+                        onChange={(e) => setOrganization(e.target.value)}
+                        placeholder="Your University, Company, or Institution"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 text-gray-900 placeholder-gray-500"
+                      />
+                    </div>
+
+                    {/* Feedback Text Field */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        <MessageSquare className="w-4 h-4 inline mr-2 text-green-600" />
+                        Your Feedback <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        value={feedbackText}
+                        onChange={(e) => setFeedbackText(e.target.value)}
+                        rows={5}
+                        placeholder="Share your experience, thoughts, and suggestions about our service..."
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 resize-none hover:border-gray-400 text-gray-900 placeholder-gray-500"
+                      />
+                      <div className="flex justify-between items-center mt-2">
+                        <p className="text-xs text-gray-500">Minimum 10 characters required</p>
+                        <p className="text-xs text-gray-400">{feedbackText.length}/500</p>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-4 pt-4">
+                      <button
+                        type="button"
+                        onClick={handleCloseFeedback}
+                        className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSubmitFeedback}
+                        disabled={!feedbackText.trim() || feedbackText.length < 10 || isSubmitting}
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-xl transition-all duration-200 font-semibold disabled:cursor-not-allowed transform hover:scale-105 disabled:hover:scale-100 shadow-lg hover:shadow-xl disabled:shadow-none"
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Submitting...
+                          </div>
+                        ) : (
+                          'Submit Feedback'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
