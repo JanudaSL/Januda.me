@@ -334,7 +334,7 @@ export default function AiGrowFooter() {
           <section aria-labelledby="contact-form">
             <div className="text-center mb-6">
               <h2 id="contact-form" className="text-2xl font-bold text-gray-800 mb-2">Get in Touch</h2>
-              <h3 className="text-xl font-semibold text-gray-700">We're here to help you grow.</h3>
+              <h3 className="text-xl font-semibold text-gray-700">I’m here to help you build and grow with technology.</h3>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6" noValidate>
