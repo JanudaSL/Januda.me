@@ -12,7 +12,7 @@ const TeamCarousel = () => {
     {
       id: 1,
       title: "Want to work together!",
-      subtitle: "I’m available for Freelance Work.",
+      subtitle: "I'm available for Freelance Work.",
       buttonText: "Contact Me Via Fiverr ",
       bgImage: "/jk1.png"
     }
@@ -48,7 +48,7 @@ const TeamCarousel = () => {
     };
 
     loadImages();
-  }, []);
+  }, [slides]);
 
   // Auto-play functionality - only start after images are loaded
   useEffect(() => {
@@ -59,7 +59,7 @@ const TeamCarousel = () => {
 
       return () => clearInterval(timer);
     }
-  }, [slides.length, imagesLoaded]);
+  }, [slides.length, imagesLoaded, slides]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);

@@ -1,4 +1,4 @@
-import { ArrowRight, Tag, MessageCircle } from 'lucide-react';
+import { Tag, MessageCircle } from 'lucide-react';
 
 export default function IBMDealsSection() {
   return (

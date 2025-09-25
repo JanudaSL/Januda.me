@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Star, Plus, X, User, Building, Mail, MessageSquare } from 'lucide-react';
 
 const TestimonialsCarousel = () => {
@@ -47,6 +47,32 @@ const TestimonialsCarousel = () => {
   ]);
 
    const API_URL = "https://feedbk-1.onrender.com/api/recommendations";
+
+  // Load recommendations from API
+  const loadRecommendations = useCallback(async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (response.ok) {
+        const data = await response.json();
+        const apiTestimonials = data.map(rec => ({
+          id: `api-${rec.id || Math.random()}`,
+          name: rec.fullName,
+          role: rec.organization || "Valued Client",
+          image: rec.avatarUrl || generateGravatarUrl(rec.email),
+          rating: 5,
+          text: rec.feedback
+        }));
+        
+        setTestimonialsList(prev => {
+          const existingIds = prev.map(t => t.id);
+          const newTestimonials = apiTestimonials.filter(t => !existingIds.includes(t.id));
+          return [...prev, ...newTestimonials];
+        });
+      }
+    } catch (error) {
+      console.error('Error loading recommendations:', error);
+    }
+  }, []);
 
   // Load Google Sign-In script and initialize
   useEffect(() => {
@@ -97,7 +123,7 @@ const TestimonialsCarousel = () => {
 
     loadGoogleScript();
     loadRecommendations();
-  }, []);
+  }, [loadRecommendations]);
 
   // Google Sign-In callback function
   const handleCredentialResponse = (response) => {
@@ -146,32 +172,6 @@ const TestimonialsCarousel = () => {
     }, 100);
   };
 
-  // Load recommendations from API
-  const loadRecommendations = async () => {
-    try {
-      const response = await fetch(API_URL);
-      if (response.ok) {
-        const data = await response.json();
-        const apiTestimonials = data.map(rec => ({
-          id: `api-${rec.id || Math.random()}`,
-          name: rec.fullName,
-          role: rec.organization || "Valued Client",
-          image: rec.avatarUrl || generateGravatarUrl(rec.email),
-          rating: 5,
-          text: rec.feedback
-        }));
-        
-        setTestimonialsList(prev => {
-          const existingIds = prev.map(t => t.id);
-          const newTestimonials = apiTestimonials.filter(t => !existingIds.includes(t.id));
-          return [...prev, ...newTestimonials];
-        });
-      }
-    } catch (error) {
-      console.error('Error loading recommendations:', error);
-    }
-  };
-
   // Generate Gravatar URL
   const generateGravatarUrl = (email) => {
     let hash = 0;
@@ -183,12 +183,12 @@ const TestimonialsCarousel = () => {
     return `https://www.gravatar.com/avatar/${Math.abs(hash)}?d=identicon&s=80`;
   };
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => {
       const nextIndex = prevIndex + 1;
       return nextIndex >= testimonialsList.length - 1 ? 0 : nextIndex;
     });
-  };
+  }, [testimonialsList.length]);
 
   const prevSlide = () => {
     setCurrentIndex((prevIndex) => {
@@ -204,7 +204,7 @@ const TestimonialsCarousel = () => {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [currentIndex, isPaused, showFeedbackForm]);
+  }, [currentIndex, isPaused, showFeedbackForm, nextSlide]);
 
   const handleMouseEnter = () => setIsPaused(true);
   const handleMouseLeave = () => setIsPaused(false);
@@ -294,7 +294,7 @@ const TestimonialsCarousel = () => {
                 My Testimonials
               </p>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-8">
-                What They're
+                What They&apos;re
                 <br />
                 Talking About
                 <br />
@@ -320,13 +320,14 @@ const TestimonialsCarousel = () => {
             {/* Right Section - Testimonials */}
             <div className="lg:w-2/3 relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
               <div className="flex gap-6 overflow-hidden">
-                {testimonialsList.slice(currentIndex, currentIndex + 2).map((testimonial, index) => (
+                {testimonialsList.slice(currentIndex, currentIndex + 2).map((testimonial) => (
                   <div
                     key={testimonial.id}
                     className="flex-1 bg-gray-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
                   >
                     <div className="flex items-center mb-6">
                       <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-green-200 mr-4 transition-transform duration-300 hover:scale-110">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={testimonial.image}
                           alt={testimonial.name}
@@ -449,10 +450,11 @@ const TestimonialsCarousel = () => {
                     <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 border border-green-200">
                       <div className="flex items-center mb-4">
                         <div className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={loggedInUser.avatarUrl}
                             alt={loggedInUser.name}
-                            className="w-16 h-16 rounded-full border-4 border-white shadow-lg"
+                            className="w-16 h-16 rounded-full border-4 border-white shadow-lg object-cover"
                             onError={(e) => {
                               e.target.src = generateGravatarUrl(loggedInUser.email);
                             }}

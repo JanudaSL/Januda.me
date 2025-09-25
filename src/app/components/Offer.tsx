@@ -46,7 +46,7 @@ export default function ServicesShowcase() {
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">What I Offer</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            What I think I'm good at...
+            What I think I&apos;m good at...
           </p>
         </div>
 

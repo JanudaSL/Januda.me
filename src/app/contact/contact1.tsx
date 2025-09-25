@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Phone, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 const IBMContactInfo = () => {
   return (

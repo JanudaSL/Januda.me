@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function JanudaProjectsCards() {
   const [allProjects, setAllProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [apiSuccess, setApiSuccess] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -16,8 +15,8 @@ export default function JanudaProjectsCards() {
   // Development flag - set to false to skip API call during development
   const ENABLE_API_FETCH = true;
 
-  // Hardcoded fallback data
-  const fallbackProjects = [
+  // Hardcoded fallback data - moved outside useEffect to avoid dependency issues
+  const getFallbackProjects = useCallback(() => [
     {
       title: "Smart Greenhouse Management System",
       titleUnderline: true,
@@ -126,7 +125,7 @@ export default function JanudaProjectsCards() {
       technologies: ["React Native", "Firebase", "Redux", "Push Notifications"],
       link: "#"
     }
-  ];
+  ], []);
 
   // Calculate pagination values
   const totalProjects = allProjects.length;
@@ -137,6 +136,8 @@ export default function JanudaProjectsCards() {
 
   useEffect(() => {
     const fetchProjects = async () => {
+      const fallbackProjects = getFallbackProjects();
+      
       // If API is disabled for development, use fallback immediately
       if (!ENABLE_API_FETCH) {
         console.log('🔧 API fetch disabled for development, using fallback data');
@@ -148,7 +149,6 @@ export default function JanudaProjectsCards() {
       try {
         setLoading(true);
         setError(null);
-        setApiSuccess(false);
         
         // Add timeout to prevent hanging
         const controller = new AbortController();
@@ -180,7 +180,6 @@ export default function JanudaProjectsCards() {
           if (apiData && Array.isArray(apiData) && apiData.length > 0) {
             // Use API data first, then append fallback
             console.log('✅ API data loaded successfully:', apiData.length, 'projects');
-            setApiSuccess(true);
             setAllProjects([...apiData, ...fallbackProjects]);
           } else {
             console.log('⚠️ API returned empty or invalid data, using fallback');
@@ -212,7 +211,7 @@ export default function JanudaProjectsCards() {
     };
 
     fetchProjects();
-  }, []);
+  }, [ENABLE_API_FETCH, getFallbackProjects]);
 
   // Reset to first page when projectsPerPage changes
   useEffect(() => {

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Calendar, ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, Clock, ExternalLink, User, Loader2, AlertCircle } from 'lucide-react';
+
 
 const IBMInsightsBlog = () => {
   const [itemsPerPage, setItemsPerPage] = useState(12);
@@ -13,8 +14,8 @@ const IBMInsightsBlog = () => {
   const [dataSource, setDataSource] = useState('both'); // 'hardcoded', 'database', 'both'
   const [apiStatus, setApiStatus] = useState('checking'); // 'checking', 'available', 'unavailable'
 
-  // Static blog posts (fallback data)
-  const staticBlogPosts = [
+  // Static blog posts (fallback data) - using useMemo to prevent unnecessary re-renders
+  const staticBlogPosts = useMemo(() => [
     {
       id: 1,
       title: "Transforming Healthcare IT: Key Insights and Digital Innovation Strategies",
@@ -99,7 +100,7 @@ const IBMInsightsBlog = () => {
       tags: ["quantum-computing", "research", "algorithms", "technology"],
       featured: false
     }
-  ];
+  ], []);
 
   const categories = [
     { id: 'all', name: 'All Topics', color: 'gray' },
@@ -122,7 +123,7 @@ const IBMInsightsBlog = () => {
   ];
 
   // Check API availability by testing multiple endpoints
-  const checkApiAvailability = async () => {
+  const checkApiAvailability = useCallback(async () => {
     console.log('Testing API endpoints...');
     
     for (const endpoint of possibleEndpoints) {
@@ -152,7 +153,7 @@ const IBMInsightsBlog = () => {
     console.warn('No working API endpoints found');
     setApiStatus('unavailable');
     return null;
-  };
+  }, []);
 
   // Fetch blog posts from API
   useEffect(() => {
@@ -230,10 +231,10 @@ const IBMInsightsBlog = () => {
             }
             
             // Transform API data to match our component structure if needed
-            const transformedPosts = postsArray.map((post, index) => ({
+            const transformedPosts = postsArray.map((post, postIndex) => ({
               ...post,
               // Ensure required fields exist
-              id: post.id || `db_${Date.now()}_${index}`,
+              id: post.id || `db_${Date.now()}_${postIndex}`,
               writeDate: post.writeDate || post.created_at || new Date().toISOString().split('T')[0],
               readTime: post.readTime || `${Math.ceil(Math.random() * 10 + 3)} min read`,
               imageUrl: post.imageUrl || `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=400&h=250&fit=crop`,
@@ -308,7 +309,7 @@ const IBMInsightsBlog = () => {
     };
 
     fetchBlogPosts();
-  }, [dataSource]);
+  }, [dataSource, checkApiAvailability, staticBlogPosts]);
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -438,7 +439,7 @@ const IBMInsightsBlog = () => {
 
         {/* Blog Posts Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {paginatedPosts.map((post, index) => (
+          {paginatedPosts.map((post) => (
             <article key={post.id} className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-100">
               {/* Featured/Source Badges */}
               <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
@@ -467,6 +468,7 @@ const IBMInsightsBlog = () => {
 
               {/* Post Image */}
               <div className="relative overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={post.imageUrl} 
                   alt={post.title}

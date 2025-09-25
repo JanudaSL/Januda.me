@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { MapPin, Calendar } from 'lucide-react';
+
 
 export default function AboutJanuda() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -71,7 +71,7 @@ export default function AboutJanuda() {
                 <p className="text-gray-200 leading-relaxed text-xs sm:text-sm font-light text-left">
                   I want to inspire student communities as much as possible with all my skills and capabilities. 
                   I dream of seeing a purpose-driven student community globally instead of everyone going with the flow. 
-                  Because I believe that, <span className="text-lime-300 font-medium italic">"If we can change the way we see the world, we can change the world we see."</span>
+                  Because I believe that, <span className="text-lime-300 font-medium italic">&ldquo;If we can change the way we see the world, we can change the world we see.&rdquo;</span>
                 </p>
               </div>
             </div>
