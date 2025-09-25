@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, JSX } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Star, Plus, X, User, Building, Mail, MessageSquare } from 'lucide-react';
+import Image from 'next/image';
 
 // Define interfaces for type safety
 interface Testimonial {
@@ -38,14 +39,34 @@ interface GoogleUserData {
   picture: string;
 }
 
+// Google Sign-In configuration interfaces
+interface GoogleSignInConfig {
+  client_id: string;
+  callback: (response: GoogleCredentialResponse) => void;
+  auto_prompt?: boolean;
+  cancel_on_tap_outside?: boolean;
+  use_fedcm_for_prompt?: boolean;
+  ux_mode?: string;
+  context?: string;
+}
+
+interface GoogleButtonConfig {
+  theme?: string;
+  size?: string;
+  text?: string;
+  width?: string;
+  logo_alignment?: string;
+  shape?: string;
+}
+
 // Extend Window interface for Google Sign-In
 declare global {
   interface Window {
     google?: {
       accounts: {
         id: {
-          initialize: (config: any) => void;
-          renderButton: (element: HTMLElement, config: any) => void;
+          initialize: (config: GoogleSignInConfig) => void;
+          renderButton: (element: HTMLElement, config: GoogleButtonConfig) => void;
         };
       };
     };
@@ -186,7 +207,7 @@ const TestimonialsCarousel: React.FC = () => {
       // Initialize Google Sign-In
       if (window.google && window.google.accounts) {
         try {
-          window.google.accounts.id.initialize({
+          const config: GoogleSignInConfig = {
             client_id: "1081185265333-j6872g780gpe983c0hi9ac3nt858ksmp.apps.googleusercontent.com",
             callback: handleCredentialResponse,
             auto_prompt: false,
@@ -194,7 +215,8 @@ const TestimonialsCarousel: React.FC = () => {
             use_fedcm_for_prompt: false,
             ux_mode: 'popup',
             context: 'signin'
-          });
+          };
+          window.google.accounts.id.initialize(config);
         } catch (error) {
           console.log('Google Sign-In initialization error:', error);
         }
@@ -254,14 +276,15 @@ const TestimonialsCarousel: React.FC = () => {
           signInContainer.innerHTML = '';
           
           try {
-            window.google.accounts.id.renderButton(signInContainer, {
+            const buttonConfig: GoogleButtonConfig = {
               theme: 'outline',
               size: 'large',
               text: 'signin_with',
               width: '320',
               logo_alignment: 'left',
               shape: 'rectangular'
-            });
+            };
+            window.google.accounts.id.renderButton(signInContainer, buttonConfig);
           } catch (error) {
             console.log('Error rendering Google button:', error);
           }
@@ -331,6 +354,17 @@ const TestimonialsCarousel: React.FC = () => {
     setLoggedInUser(null);
   };
 
+  // Image error handler
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, email?: string) => {
+    const target = e.target as HTMLImageElement;
+    if (email) {
+      target.src = generateGravatarUrl(email);
+    } else {
+      // Fallback to a default avatar
+      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(target.alt)}&background=10b981&color=ffffff&size=80`;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-16 px-4 relative">
       <div className="max-w-7xl mx-auto">
@@ -376,11 +410,14 @@ const TestimonialsCarousel: React.FC = () => {
                     className="flex-1 bg-gray-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
                   >
                     <div className="flex items-center mb-6">
-                      <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-green-200 mr-4 transition-transform duration-300 hover:scale-110">
-                        <img
+                      <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-green-200 mr-4 transition-transform duration-300 hover:scale-110 relative">
+                        <Image
                           src={testimonial.image}
                           alt={testimonial.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                          onError={(e) => handleImageError(e, testimonial.name.includes('@') ? testimonial.name : undefined)}
                         />
                       </div>
                       <div className="flex-1">
@@ -426,7 +463,7 @@ const TestimonialsCarousel: React.FC = () => {
               
               {/* Pagination Dots */}
               <div className="flex justify-center mt-6 gap-2">
-                {Array.from({ length: testimonialsList.length - 1 }, (_, index) => (
+                {Array.from({ length: Math.max(testimonialsList.length - 1, 1) }, (_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentIndex(index)}
@@ -499,15 +536,16 @@ const TestimonialsCarousel: React.FC = () => {
                     <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 border border-green-200">
                       <div className="flex items-center mb-4">
                         <div className="relative">
-                          <img
-                            src={loggedInUser.avatarUrl}
-                            alt={loggedInUser.name}
-                            className="w-16 h-16 rounded-full border-4 border-white shadow-lg object-cover"
-                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = generateGravatarUrl(loggedInUser.email);
-                            }}
-                          />
+                          <div className="w-16 h-16 rounded-full border-4 border-white shadow-lg overflow-hidden relative">
+                            <Image
+                              src={loggedInUser.avatarUrl}
+                              alt={loggedInUser.name}
+                              fill
+                              className="object-cover"
+                              sizes="64px"
+                              onError={(e) => handleImageError(e, loggedInUser.email)}
+                            />
+                          </div>
                           <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                             <User className="w-3 h-3 text-white" />
                           </div>
