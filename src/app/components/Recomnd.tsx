@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, ReactElement } from 'react';
 import { ChevronLeft, ChevronRight, Star, Plus, X, User, Building, Mail, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 
@@ -253,7 +253,7 @@ const TestimonialsCarousel: React.FC = () => {
   const handleMouseEnter = (): void => setIsPaused(true);
   const handleMouseLeave = (): void => setIsPaused(false);
 
-  const renderStars = (rating: number): JSX.Element[] => {
+  const renderStars = (rating: number): ReactElement[] => {
     return [...Array(5)].map((_, index) => (
       <Star
         key={index}
