@@ -113,14 +113,14 @@ const IBMInsightsBlog = () => {
   ];
 
   // Common API endpoints to test
-  const possibleEndpoints = [
+  const possibleEndpoints = useMemo(() => [
     '/api',
     '/api/blogs',
     '/api/posts',
     '/blogs',
     '/posts',
     '/'
-  ];
+  ], []);
 
   // Check API availability by testing multiple endpoints
   const checkApiAvailability = useCallback(async () => {
@@ -153,7 +153,7 @@ const IBMInsightsBlog = () => {
     console.warn('No working API endpoints found');
     setApiStatus('unavailable');
     return null;
-  }, []);
+  }, [possibleEndpoints]);
 
   // Fetch blog posts from API
   useEffect(() => {
@@ -615,6 +615,7 @@ const IBMInsightsBlog = () => {
                 of {Math.ceil(filteredPosts.length / itemsPerPage)} pages
               </span>
 
+              {/* Navigation Arrows */}
               {/* Navigation Arrows */}
               <div className="flex items-center gap-1">
                 <button 

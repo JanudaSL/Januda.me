@@ -1,14 +1,14 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
 const TeamCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState<boolean[]>([]);
 
-  // Updated slides data to match the team recruitment design
-  const slides = [
+  // Updated slides data to match the team recruitment design - wrapped in useMemo
+  const slides = useMemo(() => [
     {
       id: 1,
       title: "Want to work together!",
@@ -16,7 +16,7 @@ const TeamCarousel = () => {
       buttonText: "Contact Me Via Fiverr ",
       bgImage: "/jk1.png"
     }
-  ];
+  ], []);
 
   // Preload images
   useEffect(() => {

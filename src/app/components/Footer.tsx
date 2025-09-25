@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 
 // Types
 interface FormData {
@@ -14,6 +15,13 @@ interface FormData {
 
 interface FormErrors {
   [key: string]: string;
+}
+
+interface ApiResponse {
+  success?: boolean;
+  message?: string;
+  error?: string;
+  [key: string]: unknown;
 }
 
 // Constants
@@ -140,7 +148,7 @@ export default function AiGrowFooter() {
   }, [errors]);
 
   // API call function
-  const submitToAPI = async (data: FormData): Promise<any> => {
+  const submitToAPI = async (data: FormData): Promise<ApiResponse> => {
     const url = `${API_CONFIG.baseURL}${API_CONFIG.endpoints.contacts}`;
     
     const response = await fetch(url, {
@@ -166,7 +174,7 @@ export default function AiGrowFooter() {
       try {
         const errorData = await response.json();
         errorMsg = errorData.message || errorData.error || errorMsg;
-      } catch (parseError) {
+      } catch {
         // If we can't parse the error response, use the default message
       }
       
@@ -276,11 +284,13 @@ export default function AiGrowFooter() {
           {/* Left Section - Company Info */}
           <section className="space-y-8" aria-labelledby="company-info">
             <div className="flex items-center space-x-2">
-              <img 
+              <Image 
                 src="/januda.png" 
                 alt="AiGrow Company Logo" 
-                className="w-26 h-26 object-contain"
-                loading="lazy"
+                width={104}
+                height={104}
+                className="object-contain"
+                priority={false}
               />
             </div>
             
@@ -334,14 +344,14 @@ export default function AiGrowFooter() {
           <section aria-labelledby="contact-form">
             <div className="text-center mb-6">
               <h2 id="contact-form" className="text-2xl font-bold text-gray-800 mb-2">Get in Touch</h2>
-              <h3 className="text-xl font-semibold text-gray-700">I’m here to help you build and grow with technology.</h3>
+              <h3 className="text-xl font-semibold text-gray-700">I&apos;m here to help you build and grow with technology.</h3>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6" noValidate>
               {/* Success/Error Messages */}
               {submitStatus === 'success' && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
-                  <strong>Success!</strong> Your message has been sent successfully. We'll get back to you soon.
+                  <strong>Success!</strong> Your message has been sent successfully. We&apos;ll get back to you soon.
                 </div>
               )}
               
@@ -484,6 +494,7 @@ export default function AiGrowFooter() {
               </div>
             </div>
             
+
             {/* Copyright */}
             <div className="text-sm text-gray-600 text-center">
               <p>Copyright © {new Date().getFullYear()} Januda | DESIGNED BY Januda.</p>
