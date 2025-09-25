@@ -53,7 +53,7 @@ const TeslaHeader = memo(() => {
   const [isHovered, setIsHovered] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const progressRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Fast image loading - use preloaded images
