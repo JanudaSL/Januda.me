@@ -1,17 +1,67 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, JSX } from 'react';
 import { ChevronLeft, ChevronRight, Star, Plus, X, User, Building, Mail, MessageSquare } from 'lucide-react';
 
-const TestimonialsCarousel = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState(null);
-  const [feedbackText, setFeedbackText] = useState('');
-  const [organization, setOrganization] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [testimonialsList, setTestimonialsList] = useState([
+// Define interfaces for type safety
+interface Testimonial {
+  id: string | number;
+  name: string;
+  role: string;
+  image: string;
+  rating: number;
+  text: string;
+}
+
+interface ApiRecommendation {
+  id?: string | number;
+  fullName: string;
+  email: string;
+  avatarUrl?: string;
+  organization?: string;
+  feedback: string;
+}
+
+interface LoggedInUser {
+  name: string;
+  email: string;
+  avatarUrl: string;
+}
+
+interface GoogleCredentialResponse {
+  credential: string;
+}
+
+interface GoogleUserData {
+  name: string;
+  email: string;
+  picture: string;
+}
+
+// Extend Window interface for Google Sign-In
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+        };
+      };
+    };
+    handleCredentialResponse?: (response: GoogleCredentialResponse) => void;
+  }
+}
+
+const TestimonialsCarousel: React.FC = () => {
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [showFeedbackForm, setShowFeedbackForm] = useState<boolean>(false);
+  const [loggedInUser, setLoggedInUser] = useState<LoggedInUser | null>(null);
+  const [feedbackText, setFeedbackText] = useState<string>('');
+  const [organization, setOrganization] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [testimonialsList, setTestimonialsList] = useState<Testimonial[]>([
     {
       id: 1,
       name: "Achala Athukorala",
@@ -46,15 +96,26 @@ const TestimonialsCarousel = () => {
     }
   ]);
 
-   const API_URL = "https://feedbk-1.onrender.com/api/recommendations";
+  const API_URL = "https://feedbk-1.onrender.com/api/recommendations";
+
+  // Generate Gravatar URL
+  const generateGravatarUrl = (email: string): string => {
+    let hash = 0;
+    for (let i = 0; i < email.length; i++) {
+      const char = email.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return `https://www.gravatar.com/avatar/${Math.abs(hash)}?d=identicon&s=80`;
+  };
 
   // Load recommendations from API
-  const loadRecommendations = useCallback(async () => {
+  const loadRecommendations = useCallback(async (): Promise<void> => {
     try {
       const response = await fetch(API_URL);
       if (response.ok) {
-        const data = await response.json();
-        const apiTestimonials = data.map(rec => ({
+        const data: ApiRecommendation[] = await response.json();
+        const apiTestimonials: Testimonial[] = data.map((rec: ApiRecommendation) => ({
           id: `api-${rec.id || Math.random()}`,
           name: rec.fullName,
           role: rec.organization || "Valued Client",
@@ -74,9 +135,28 @@ const TestimonialsCarousel = () => {
     }
   }, []);
 
+  // Google Sign-In callback function
+  const handleCredentialResponse = useCallback((response: GoogleCredentialResponse): void => {
+    try {
+      // Decode the Google JWT token
+      const data: GoogleUserData = JSON.parse(atob(response.credential.split(".")[1]));
+      
+      const user: LoggedInUser = {
+        name: data.name,
+        email: data.email,
+        avatarUrl: data.picture
+      };
+      
+      setLoggedInUser(user);
+    } catch (error) {
+      console.error('Error parsing Google credential:', error);
+      alert('Error signing in with Google. Please try again.');
+    }
+  }, []);
+
   // Load Google Sign-In script and initialize
   useEffect(() => {
-    const loadGoogleScript = () => {
+    const loadGoogleScript = (): void => {
       // Check if script already exists
       if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
         initializeGoogle();
@@ -88,18 +168,18 @@ const TestimonialsCarousel = () => {
       script.async = true;
       script.defer = true;
       
-      script.onload = () => {
+      script.onload = (): void => {
         initializeGoogle();
       };
 
-      script.onerror = () => {
+      script.onerror = (): void => {
         console.log('Google Sign-In script failed to load');
       };
 
       document.head.appendChild(script);
     };
 
-    const initializeGoogle = () => {
+    const initializeGoogle = (): void => {
       // Make handleCredentialResponse globally available
       window.handleCredentialResponse = handleCredentialResponse;
       
@@ -123,29 +203,47 @@ const TestimonialsCarousel = () => {
 
     loadGoogleScript();
     loadRecommendations();
-  }, [loadRecommendations]);
+  }, [loadRecommendations, handleCredentialResponse]);
 
-  // Google Sign-In callback function
-  const handleCredentialResponse = (response) => {
-    try {
-      // Decode the Google JWT token
-      const data = JSON.parse(atob(response.credential.split(".")[1]));
-      
-      const user = {
-        name: data.name,
-        email: data.email,
-        avatarUrl: data.picture
-      };
-      
-      setLoggedInUser(user);
-    } catch (error) {
-      console.error('Error parsing Google credential:', error);
-      alert('Error signing in with Google. Please try again.');
+  const nextSlide = useCallback((): void => {
+    setCurrentIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+      return nextIndex >= testimonialsList.length - 1 ? 0 : nextIndex;
+    });
+  }, [testimonialsList.length]);
+
+  const prevSlide = (): void => {
+    setCurrentIndex((prevIndex) => {
+      const prevIdx = prevIndex - 1;
+      return prevIdx < 0 ? testimonialsList.length - 2 : prevIdx;
+    });
+  };
+
+  useEffect(() => {
+    if (!isPaused && !showFeedbackForm) {
+      const interval = setInterval(() => {
+        nextSlide();
+      }, 1000);
+      return () => clearInterval(interval);
     }
+  }, [currentIndex, isPaused, showFeedbackForm, nextSlide]);
+
+  const handleMouseEnter = (): void => setIsPaused(true);
+  const handleMouseLeave = (): void => setIsPaused(false);
+
+  const renderStars = (rating: number): JSX.Element[] => {
+    return [...Array(5)].map((_, index) => (
+      <Star
+        key={index}
+        className={`w-5 h-5 ${
+          index < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+        }`}
+      />
+    ));
   };
 
   // Handle "Your Feedback" button click
-  const handleYourFeedbackClick = () => {
+  const handleYourFeedbackClick = (): void => {
     setShowFeedbackForm(true);
     
     // Small delay to ensure modal is rendered, then render Google button
@@ -172,56 +270,8 @@ const TestimonialsCarousel = () => {
     }, 100);
   };
 
-  // Generate Gravatar URL
-  const generateGravatarUrl = (email) => {
-    let hash = 0;
-    for (let i = 0; i < email.length; i++) {
-      const char = email.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return `https://www.gravatar.com/avatar/${Math.abs(hash)}?d=identicon&s=80`;
-  };
-
-  const nextSlide = useCallback(() => {
-    setCurrentIndex((prevIndex) => {
-      const nextIndex = prevIndex + 1;
-      return nextIndex >= testimonialsList.length - 1 ? 0 : nextIndex;
-    });
-  }, [testimonialsList.length]);
-
-  const prevSlide = () => {
-    setCurrentIndex((prevIndex) => {
-      const prevIdx = prevIndex - 1;
-      return prevIdx < 0 ? testimonialsList.length - 2 : prevIdx;
-    });
-  };
-
-  useEffect(() => {
-    if (!isPaused && !showFeedbackForm) {
-      const interval = setInterval(() => {
-        nextSlide();
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [currentIndex, isPaused, showFeedbackForm, nextSlide]);
-
-  const handleMouseEnter = () => setIsPaused(true);
-  const handleMouseLeave = () => setIsPaused(false);
-
-  const renderStars = (rating) => {
-    return [...Array(5)].map((_, index) => (
-      <Star
-        key={index}
-        className={`w-5 h-5 ${
-          index < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-        }`}
-      />
-    ));
-  };
-
   // Submit feedback to API
-  const handleSubmitFeedback = async () => {
+  const handleSubmitFeedback = async (): Promise<void> => {
     if (!loggedInUser || !feedbackText.trim()) return;
 
     setIsSubmitting(true);
@@ -242,7 +292,7 @@ const TestimonialsCarousel = () => {
       });
 
       if (response.ok) {
-        const newTestimonial = {
+        const newTestimonial: Testimonial = {
           id: `new-${Date.now()}`,
           name: loggedInUser.name,
           role: organization || "Valued Client",
@@ -274,7 +324,7 @@ const TestimonialsCarousel = () => {
     }
   };
 
-  const handleCloseFeedback = () => {
+  const handleCloseFeedback = (): void => {
     setShowFeedbackForm(false);
     setFeedbackText('');
     setOrganization('');
@@ -327,7 +377,6 @@ const TestimonialsCarousel = () => {
                   >
                     <div className="flex items-center mb-6">
                       <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-green-200 mr-4 transition-transform duration-300 hover:scale-110">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={testimonial.image}
                           alt={testimonial.name}
@@ -450,13 +499,13 @@ const TestimonialsCarousel = () => {
                     <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 border border-green-200">
                       <div className="flex items-center mb-4">
                         <div className="relative">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={loggedInUser.avatarUrl}
                             alt={loggedInUser.name}
                             className="w-16 h-16 rounded-full border-4 border-white shadow-lg object-cover"
-                            onError={(e) => {
-                              e.target.src = generateGravatarUrl(loggedInUser.email);
+                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = generateGravatarUrl(loggedInUser.email);
                             }}
                           />
                           <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
