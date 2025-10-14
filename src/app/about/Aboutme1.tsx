@@ -45,9 +45,7 @@ export default function AboutJanuda() {
             {/* Header with improved spacing */}
             <div className="space-y-3 sm:space-y-4">
               <div className="inline-flex items-center gap-2">
-                <span className="text-blue-600 font-bold text-xs sm:text-sm uppercase tracking-wider bg-gradient-to-r from-blue-50 to-purple-50 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-blue-200 shadow-sm">
-                  💻 Software Engineer
-                </span>
+                
               </div>
               
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-[1.1] tracking-tight">

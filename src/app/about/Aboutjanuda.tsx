@@ -1,21 +1,18 @@
 import React from 'react';
-import { Lightbulb, Target, Users, Zap } from 'lucide-react';
 
-const OurApproach = () => {
-  
-
+const Aboutjanuda = () => {
   return (
     <section className="bg-gray-900 py-20 px-6 lg:px-12 relative overflow-hidden">
-      {/* Dark Background Image */}
-      <div 
+      {/* Background Image */}
+      <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ 
+        style={{
           backgroundImage: "url('/Think.png')",
-          filter: "brightness(0.3) contrast(1.2)"
+          filter: "brightness(0.3) contrast(1.2)",
         }}
       ></div>
-      
-      {/* Overlay for better text contrast */}
+
+      {/* Overlay */}
       <div className="absolute inset-0 bg-black/50"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
@@ -31,12 +28,11 @@ const OurApproach = () => {
 
         {/* Cards Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          
-         
+          {/* Add your cards here if needed */}
         </div>
       </div>
     </section>
   );
 };
 
-export default OurApproach;
+export default Aboutjanuda;

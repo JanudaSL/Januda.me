@@ -31,10 +31,10 @@ export default function IBMProductsHero() {
       {/* Background Image - 3D Voxel Grid */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/Pub.jpg"
+          src="/Pub.jpg" // Make sure this image exists in the "public" folder
           alt="IBM Blogs Background"
           fill
-          className="object-cover object-center"
+          style={{ objectFit: "cover", objectPosition: "center" }} // use style instead of className for fill images
           priority
           quality={90}
         />
