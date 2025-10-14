@@ -3,10 +3,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
+// Define the Project type
+interface Project {
+  title: string;
+  titleUnderline: boolean;
+  category: string;
+  description: string;
+  badge: string;
+  technologies: string[];
+  link: string;
+}
+
 export default function JanudaProjectsCards() {
-  const [allProjects, setAllProjects] = useState([]);
+  // Initialize with proper type
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -16,7 +28,7 @@ export default function JanudaProjectsCards() {
   const ENABLE_API_FETCH = true;
 
   // Hardcoded fallback data - moved outside useEffect to avoid dependency issues
-  const getFallbackProjects = useCallback(() => [
+  const getFallbackProjects = useCallback((): Project[] => [
     {
       title: "Smart Greenhouse Management System",
       titleUnderline: true,
@@ -174,7 +186,7 @@ export default function JanudaProjectsCards() {
             throw new Error(`API responded with status: ${response.status}`);
           }
           
-          const apiData = await response.json();
+          const apiData: Project[] = await response.json();
           
           // Check if API data exists and is valid
           if (apiData && Array.isArray(apiData) && apiData.length > 0) {
@@ -190,18 +202,23 @@ export default function JanudaProjectsCards() {
           clearTimeout(timeoutId);
           
           // Handle specific error types
-          if (fetchError.name === 'AbortError') {
-            throw new Error('API request timed out after 10 seconds');
-          } else if (fetchError.message.includes('Failed to fetch')) {
-            throw new Error('Network error - unable to reach API (CORS or connectivity issue)');
+          if (fetchError instanceof Error) {
+            if (fetchError.name === 'AbortError') {
+              throw new Error('API request timed out after 10 seconds');
+            } else if (fetchError.message.includes('Failed to fetch')) {
+              throw new Error('Network error - unable to reach API (CORS or connectivity issue)');
+            } else {
+              throw fetchError;
+            }
           } else {
-            throw fetchError;
+            throw new Error('Unknown error occurred');
           }
         }
         
       } catch (error) {
         console.error('❌ Error fetching projects:', error);
-        setError(error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setError(errorMessage);
         console.log('📦 Using fallback data instead');
         // Use fallback data on error
         setAllProjects(fallbackProjects);
@@ -218,17 +235,17 @@ export default function JanudaProjectsCards() {
     setCurrentPage(1);
   }, [projectsPerPage]);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handlePerPageChange = (e) => {
+  const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setProjectsPerPage(parseInt(e.target.value));
   };
 
-  const generatePageNumbers = () => {
-    const pages = [];
+  const generatePageNumbers = (): (number | string)[] => {
+    const pages: (number | string)[] = [];
     const maxVisiblePages = 5;
     
     if (totalPages <= maxVisiblePages) {
@@ -396,7 +413,7 @@ export default function JanudaProjectsCards() {
                     <span className="px-2 py-1 text-gray-500">...</span>
                   ) : (
                     <button
-                      onClick={() => handlePageChange(page)}
+                      onClick={() => handlePageChange(page as number)}
                       className={`px-3 py-2 rounded-lg border transition-colors ${
                         currentPage === page
                           ? 'bg-blue-600 text-white border-blue-600'

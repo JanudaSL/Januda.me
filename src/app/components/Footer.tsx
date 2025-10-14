@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import Image from 'next/image';
+import { FaLinkedinIn, FaMedium, FaXTwitter } from "react-icons/fa6";
 
 // Types
 interface FormData {
@@ -25,7 +26,6 @@ interface ApiResponse {
 }
 
 // Constants
-// Constants
 const INTERESTED_OPTIONS = [
   { value: '', label: 'Select your interest' },
   { value: 'Software-Development', label: 'Software Development' },
@@ -36,25 +36,25 @@ const INTERESTED_OPTIONS = [
 
 const SOCIAL_LINKS = [
   { 
-    name: 'Facebook', 
-    icon: 'f', 
-    url: '#', 
-    bgColor: 'bg-blue-600 hover:bg-blue-700',
-    ariaLabel: 'Visit our Facebook page'
+    name: 'LinkedIn', 
+    icon: <FaLinkedinIn />, 
+    url: 'https://www.linkedin.com/', 
+    bgColor: 'bg-blue-700 hover:bg-blue-800',
+    ariaLabel: 'Visit our LinkedIn profile'
   },
   { 
-    name: 'Twitter', 
-    icon: '@', 
-    url: '#', 
-    bgColor: 'bg-gray-800 hover:bg-gray-900',
-    ariaLabel: 'Visit our Twitter page'
+    name: 'Medium', 
+    icon: <FaMedium />, 
+    url: 'https://medium.com/', 
+    bgColor: 'bg-gray-900 hover:bg-black',
+    ariaLabel: 'Read our articles on Medium'
   },
   { 
-    name: 'WhatsApp', 
-    icon: 'W', 
-    url: '#', 
-    bgColor: 'bg-green-500 hover:bg-green-600',
-    ariaLabel: 'Contact us on WhatsApp'
+    name: 'X (Twitter)', 
+    icon: <FaXTwitter />, 
+    url: 'https://x.com/', 
+    bgColor: 'bg-black hover:bg-gray-800',
+    ariaLabel: 'Follow us on X'
   }
 ];
 
@@ -67,7 +67,6 @@ const CONTACT_INFO = {
   email: 'Janudakodi@gmail.com'
 };
 
-// API Configuration
 const API_CONFIG = {
   baseURL: 'https://conf-2db0.onrender.com',
   endpoints: {
@@ -235,37 +234,6 @@ export default function AiGrowFooter() {
     }
   }, [formData, validateForm]);
 
-  const InputField: React.FC<{
-    type: string;
-    name: keyof FormData;
-    placeholder: string;
-    className?: string;
-    required?: boolean;
-  }> = ({ type, name, placeholder, className = '', required = false }) => (
-    <div className="relative">
-      <input
-        type={type}
-        name={name}
-        placeholder={placeholder}
-        value={formData[name]}
-        onChange={handleInputChange}
-        required={required}
-        aria-invalid={errors[name] ? 'true' : 'false'}
-        aria-describedby={errors[name] ? `${name}-error` : undefined}
-        className={`w-full px-0 py-2 border-0 border-b-2 bg-transparent focus:outline-none text-gray-700 placeholder-gray-500 transition-colors duration-200 ${
-          errors[name] 
-            ? 'border-red-400 focus:border-red-500' 
-            : 'border-gray-400 focus:border-green-500'
-        } ${className}`}
-      />
-      {errors[name] && (
-        <span id={`${name}-error`} className="absolute -bottom-5 left-0 text-xs text-red-500" role="alert">
-          {errors[name]}
-        </span>
-      )}
-    </div>
-  );
-
   return (
     <footer 
       className="relative bg-cover bg-center bg-no-repeat py-16 px-4 md:px-8"
@@ -342,9 +310,11 @@ export default function AiGrowFooter() {
           
           {/* Right Section - Contact Form */}
           <section aria-labelledby="contact-form">
-            <div className="text-center mb-6">
-              <h2 id="contact-form" className="text-2xl font-bold text-gray-800 mb-2">Get in Touch</h2>
-              <h3 className="text-xl font-semibold text-gray-700">I&apos;m here to help you build and grow with technology.</h3>
+            <div className="text-center mb-8">
+              <h2 id="contact-form" className="text-3xl font-bold text-gray-800 mb-2">Get in Touch</h2>
+              <p className="text-xl text-gray-600">
+                I&apos;m here to help you build and grow with technology.
+              </p>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -362,35 +332,103 @@ export default function AiGrowFooter() {
               )}
 
               <div className="space-y-6">
+                {/* Name & Email */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <InputField
-                    type="text"
-                    name="fullName"
-                    placeholder="Full Name *"
-                    required
-                  />
-                  <InputField
-                    type="email"
-                    name="email"
-                    placeholder="Email Address *"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="fullName"
+                      placeholder="Full Name *"
+                      value={formData.fullName}
+                      onChange={handleInputChange}
+                      required
+                      aria-invalid={errors.fullName ? 'true' : 'false'}
+                      aria-describedby={errors.fullName ? 'fullName-error' : undefined}
+                      className={`w-full px-0 py-2 border-0 border-b-2 bg-transparent focus:outline-none text-gray-700 placeholder-gray-500 transition-colors duration-200 ${
+                        errors.fullName 
+                          ? 'border-red-400 focus:border-red-500' 
+                          : 'border-gray-400 focus:border-green-500'
+                      }`}
+                    />
+                    {errors.fullName && (
+                      <span id="fullName-error" className="absolute -bottom-5 left-0 text-xs text-red-500" role="alert">
+                        {errors.fullName}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="relative">
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="Email Address *"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      aria-invalid={errors.email ? 'true' : 'false'}
+                      aria-describedby={errors.email ? 'email-error' : undefined}
+                      className={`w-full px-0 py-2 border-0 border-b-2 bg-transparent focus:outline-none text-gray-700 placeholder-gray-500 transition-colors duration-200 ${
+                        errors.email 
+                          ? 'border-red-400 focus:border-red-500' 
+                          : 'border-gray-400 focus:border-green-500'
+                      }`}
+                    />
+                    {errors.email && (
+                      <span id="email-error" className="absolute -bottom-5 left-0 text-xs text-red-500" role="alert">
+                        {errors.email}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
-                <InputField
-                  type="tel"
-                  name="phone"
-                  placeholder="Phone Number *"
-                  required
-                />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <InputField
-                    type="text"
-                    name="country"
-                    placeholder="Country *"
+                {/* Phone Number */}
+                <div className="relative">
+                  <input
+                    type="tel"
+                    name="phone"
+                    placeholder="Phone Number *"
+                    value={formData.phone}
+                    onChange={handleInputChange}
                     required
+                    aria-invalid={errors.phone ? 'true' : 'false'}
+                    aria-describedby={errors.phone ? 'phone-error' : undefined}
+                    className={`w-full px-0 py-2 border-0 border-b-2 bg-transparent focus:outline-none text-gray-700 placeholder-gray-500 transition-colors duration-200 ${
+                      errors.phone 
+                        ? 'border-red-400 focus:border-red-500' 
+                        : 'border-gray-400 focus:border-green-500'
+                    }`}
                   />
+                  {errors.phone && (
+                    <span id="phone-error" className="absolute -bottom-5 left-0 text-xs text-red-500" role="alert">
+                      {errors.phone}
+                    </span>
+                  )}
+                </div>
+                
+                {/* Country & Interest */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="country"
+                      placeholder="Country *"
+                      value={formData.country}
+                      onChange={handleInputChange}
+                      required
+                      aria-invalid={errors.country ? 'true' : 'false'}
+                      aria-describedby={errors.country ? 'country-error' : undefined}
+                      className={`w-full px-0 py-2 border-0 border-b-2 bg-transparent focus:outline-none text-gray-700 placeholder-gray-500 transition-colors duration-200 ${
+                        errors.country 
+                          ? 'border-red-400 focus:border-red-500' 
+                          : 'border-gray-400 focus:border-green-500'
+                      }`}
+                    />
+                    {errors.country && (
+                      <span id="country-error" className="absolute -bottom-5 left-0 text-xs text-red-500" role="alert">
+                        {errors.country}
+                      </span>
+                    )}
+                  </div>
                   
                   <div className="relative">
                     <select
@@ -420,13 +458,14 @@ export default function AiGrowFooter() {
                   </div>
                 </div>
                 
+                {/* Message */}
                 <div className="relative">
                   <textarea
                     name="message"
                     placeholder="Your Message *"
                     value={formData.message}
                     onChange={handleInputChange}
-                    rows={4}
+                    rows={6}
                     required
                     aria-invalid={errors.message ? 'true' : 'false'}
                     aria-describedby={errors.message ? 'message-error' : undefined}
@@ -443,10 +482,11 @@ export default function AiGrowFooter() {
                   )}
                 </div>
                 
+                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-green-500 hover:bg-green-600 disabled:bg-green-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-8 rounded transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  className="bg-green-500 hover:bg-green-600 disabled:bg-green-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-md transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                   aria-label={isSubmitting ? 'Submitting form...' : 'Submit contact form'}
                 >
                   {isSubmitting ? (

@@ -3,19 +3,72 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Calendar, ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, Clock, ExternalLink, User, Loader2, AlertCircle } from 'lucide-react';
 
+// Type definitions
+interface BlogPost {
+  id: number | string;
+  title: string;
+  writeDate: string;
+  category: string;
+  author?: string;
+  authorTitle?: string;
+  readTime: string;
+  description: string;
+  imageUrl: string;
+  moreInfoLink: string;
+  tags: string[];
+  featured: boolean;
+  source?: 'database' | 'hardcoded';
+  isLatest?: boolean;
+  created_at?: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+}
+
+// Interface for raw API response data (before transformation)
+interface ApiPostData {
+  id?: number | string;
+  title?: string;
+  writeDate?: string;
+  created_at?: string;
+  category?: string;
+  author?: string;
+  authorTitle?: string;
+  readTime?: string;
+  description?: string;
+  imageUrl?: string;
+  moreInfoLink?: string;
+  tags?: string[];
+  featured?: boolean;
+  [key: string]: unknown; // Allow for additional fields from API
+}
+
+// Interface for API response structure
+interface ApiResponse {
+  posts?: ApiPostData[];
+  data?: ApiPostData[];
+  [key: string]: unknown;
+}
+
+type DataSource = 'hardcoded' | 'database' | 'both';
+type ApiStatus = 'checking' | 'available' | 'unavailable';
+
 
 const IBMInsightsBlog = () => {
-  const [itemsPerPage, setItemsPerPage] = useState(12);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [blogPosts, setBlogPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [dataSource, setDataSource] = useState('both'); // 'hardcoded', 'database', 'both'
-  const [apiStatus, setApiStatus] = useState('checking'); // 'checking', 'available', 'unavailable'
+  const [itemsPerPage, setItemsPerPage] = useState<number>(12);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<DataSource>('both');
+  const [apiStatus, setApiStatus] = useState<ApiStatus>('checking');
 
   // Static blog posts (fallback data) - using useMemo to prevent unnecessary re-renders
-  const staticBlogPosts = useMemo(() => [
+  const staticBlogPosts = useMemo<BlogPost[]>(() => [
     {
       id: 1,
       title: "Transforming Healthcare IT: Key Insights and Digital Innovation Strategies",
@@ -102,7 +155,7 @@ const IBMInsightsBlog = () => {
     }
   ], []);
 
-  const categories = [
+  const categories: Category[] = [
     { id: 'all', name: 'All Topics', color: 'gray' },
     { id: 'healthcare', name: 'Healthcare IT', color: 'red' },
     { id: 'ai', name: 'Artificial Intelligence', color: 'purple' },
@@ -113,7 +166,7 @@ const IBMInsightsBlog = () => {
   ];
 
   // Common API endpoints to test
-  const possibleEndpoints = useMemo(() => [
+  const possibleEndpoints = useMemo<string[]>(() => [
     '/api',
     '/api/blogs',
     '/api/posts',
@@ -123,7 +176,7 @@ const IBMInsightsBlog = () => {
   ], []);
 
   // Check API availability by testing multiple endpoints
-  const checkApiAvailability = useCallback(async () => {
+  const checkApiAvailability = useCallback(async (): Promise<string | null> => {
     console.log('Testing API endpoints...');
     
     for (const endpoint of possibleEndpoints) {
@@ -146,7 +199,8 @@ const IBMInsightsBlog = () => {
           return endpoint; // Return the working endpoint
         }
       } catch (err) {
-        console.log(`❌ Endpoint ${endpoint} failed: ${err.message}`);
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        console.log(`❌ Endpoint ${endpoint} failed: ${errorMessage}`);
       }
     }
     
@@ -161,8 +215,8 @@ const IBMInsightsBlog = () => {
       setLoading(true);
       setError(null);
       
-      let finalPosts = [];
-      let dbPosts = [];
+      let finalPosts: BlogPost[] = [];
+      let dbPosts: BlogPost[] = [];
       
       // Always include hardcoded posts if dataSource allows
       if (dataSource === 'hardcoded' || dataSource === 'both') {
@@ -216,53 +270,61 @@ const IBMInsightsBlog = () => {
             console.log('API Response:', data);
             
             // Handle different response formats
-            let postsArray = [];
+            let postsArray: ApiPostData[] = [];
             if (Array.isArray(data)) {
-              postsArray = data;
-            } else if (data && Array.isArray(data.posts)) {
-              postsArray = data.posts;
-            } else if (data && Array.isArray(data.data)) {
-              postsArray = data.data;
+              postsArray = data as ApiPostData[];
+            } else if (data && Array.isArray((data as ApiResponse).posts)) {
+              postsArray = (data as ApiResponse).posts!;
+            } else if (data && Array.isArray((data as ApiResponse).data)) {
+              postsArray = (data as ApiResponse).data!;
             } else if (data && typeof data === 'object') {
               // If it's a single post object, wrap it in an array
-              postsArray = [data];
+              postsArray = [data as ApiPostData];
             } else {
               throw new Error('Invalid data format received from API');
             }
             
-            // Transform API data to match our component structure if needed
-            const transformedPosts = postsArray.map((post, postIndex) => ({
-              ...post,
-              // Ensure required fields exist
+            // Transform API data to match our component structure - ensuring all required fields
+            const transformedPosts: BlogPost[] = postsArray.map((post: ApiPostData, postIndex: number) => ({
+              // Ensure required fields exist with fallback values
               id: post.id || `db_${Date.now()}_${postIndex}`,
+              title: post.title || 'Untitled Post',
               writeDate: post.writeDate || post.created_at || new Date().toISOString().split('T')[0],
+              category: post.category || 'general',
+              description: post.description || 'No description available.',
               readTime: post.readTime || `${Math.ceil(Math.random() * 10 + 3)} min read`,
               imageUrl: post.imageUrl || `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=400&h=250&fit=crop`,
               moreInfoLink: post.moreInfoLink || '#',
               tags: post.tags || [],
               featured: post.featured || false,
-              source: 'database' // Add source identifier
+              // Optional fields
+              author: post.author,
+              authorTitle: post.authorTitle,
+              created_at: post.created_at,
+              source: 'database' as const // Add source identifier
             }));
 
             dbPosts = transformedPosts;
             
             // Sort database posts by date (newest first)
-            dbPosts.sort((a, b) => new Date(b.writeDate) - new Date(a.writeDate));
+            dbPosts.sort((a: BlogPost, b: BlogPost) => new Date(b.writeDate).getTime() - new Date(a.writeDate).getTime());
             
           } catch (err) {
             console.error('Error fetching blog posts:', err);
             let errorMessage = 'Failed to load data from database';
             
-            if (err.name === 'AbortError') {
-              errorMessage = 'Request timed out - API server may be slow or unavailable';
-            } else if (err.message.includes('404')) {
-              errorMessage = 'API endpoint not found (404) - service may be unavailable';
-            } else if (err.message.includes('500')) {
-              errorMessage = 'Server error (500) - database may be temporarily unavailable';
-            } else if (err.message.includes('Failed to fetch')) {
-              errorMessage = 'Network error - unable to connect to API server';
-            } else {
-              errorMessage = err.message;
+            if (err instanceof Error) {
+              if (err.name === 'AbortError') {
+                errorMessage = 'Request timed out - API server may be slow or unavailable';
+              } else if (err.message.includes('404')) {
+                errorMessage = 'API endpoint not found (404) - service may be unavailable';
+              } else if (err.message.includes('500')) {
+                errorMessage = 'Server error (500) - database may be temporarily unavailable';
+              } else if (err.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error - unable to connect to API server';
+              } else {
+                errorMessage = err.message;
+              }
             }
             
             setError(errorMessage);
@@ -286,19 +348,19 @@ const IBMInsightsBlog = () => {
         // Put newest DB post first, then hardcoded posts, then remaining DB posts
         if (dbPosts.length > 0) {
           const newestDbPost = { ...dbPosts[0], featured: true, isLatest: true };
-          const remainingDbPosts = dbPosts.slice(1).map(post => ({ ...post, source: 'database' }));
-          const hardcodedPosts = staticBlogPosts.map(post => ({ ...post, source: 'hardcoded' }));
+          const remainingDbPosts = dbPosts.slice(1).map(post => ({ ...post, source: 'database' as const }));
+          const hardcodedPosts = staticBlogPosts.map(post => ({ ...post, source: 'hardcoded' as const }));
           
           finalPosts = [newestDbPost, ...hardcodedPosts, ...remainingDbPosts];
         } else {
           // If no DB posts, just use hardcoded
-          finalPosts = staticBlogPosts.map(post => ({ ...post, source: 'hardcoded' }));
+          finalPosts = staticBlogPosts.map(post => ({ ...post, source: 'hardcoded' as const }));
         }
       } else if (dataSource === 'database') {
         if (dbPosts.length > 0) {
           dbPosts[0].featured = true;
           dbPosts[0].isLatest = true;
-          finalPosts = dbPosts.map(post => ({ ...post, source: 'database' }));
+          finalPosts = dbPosts.map(post => ({ ...post, source: 'database' as const }));
         } else {
           finalPosts = [];
         }
@@ -311,20 +373,21 @@ const IBMInsightsBlog = () => {
     fetchBlogPosts();
   }, [dataSource, checkApiAvailability, staticBlogPosts]);
 
-  const getCategoryColor = (category) => {
-    const colors = {
+  const getCategoryColor = (category: string): string => {
+    const colors: Record<string, string> = {
       healthcare: 'text-red-600 bg-red-50 border-red-200',
       ai: 'text-purple-600 bg-purple-50 border-purple-200',
       cloud: 'text-cyan-600 bg-cyan-50 border-cyan-200',
       security: 'text-orange-600 bg-orange-50 border-orange-200',
       data: 'text-green-600 bg-green-50 border-green-200',
-      quantum: 'text-indigo-600 bg-indigo-50 border-indigo-200'
+      quantum: 'text-indigo-600 bg-indigo-50 border-indigo-200',
+      general: 'text-gray-600 bg-gray-50 border-gray-200'
     };
     return colors[category] || 'text-gray-600 bg-gray-50 border-gray-200';
   };
 
-  const getFilterColor = (category, isSelected) => {
-    const colors = {
+  const getFilterColor = (category: string, isSelected: boolean): string => {
+    const colors: Record<string, string> = {
       all: isSelected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
       healthcare: isSelected ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700 hover:bg-red-100',
       ai: isSelected ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-700 hover:bg-purple-100',
@@ -336,7 +399,7 @@ const IBMInsightsBlog = () => {
     return colors[category] || 'bg-gray-100 text-gray-700';
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -345,21 +408,21 @@ const IBMInsightsBlog = () => {
     });
   };
 
-  const filteredPosts = selectedCategory === 'all' 
+  const filteredPosts: BlogPost[] = selectedCategory === 'all' 
     ? blogPosts 
     : blogPosts.filter(post => post.category === selectedCategory);
 
-  const paginatedPosts = filteredPosts.slice(
+  const paginatedPosts: BlogPost[] = filteredPosts.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const handleCategoryFilter = (category) => {
+  const handleCategoryFilter = (category: string): void => {
     setSelectedCategory(category);
     setCurrentPage(1); // Reset to first page when filtering
   };
 
-  const retryApiConnection = () => {
+  const retryApiConnection = (): void => {
     setError(null);
     setApiStatus('checking');
     // Trigger re-fetch by toggling dataSource briefly
@@ -376,7 +439,7 @@ const IBMInsightsBlog = () => {
           <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading blog posts...</p>
           {apiStatus === 'checking' && (
-            <p className="text-sm text-gray-500 mt-2">Checking API availability...</p>
+            <p className="text-sm text-gray-500 mt-2"></p>
           )}
         </div>
       </div>
@@ -468,13 +531,13 @@ const IBMInsightsBlog = () => {
 
               {/* Post Image */}
               <div className="relative overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={post.imageUrl} 
                   alt={post.title}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
-                    e.target.src = `https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=400&h=250&fit=crop`;
+                    const target = e.target as HTMLImageElement;
+                    target.src = `https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=400&h=250&fit=crop`;
                   }}
                 />
                 <div className="absolute bottom-4 left-4">
@@ -615,7 +678,6 @@ const IBMInsightsBlog = () => {
                 of {Math.ceil(filteredPosts.length / itemsPerPage)} pages
               </span>
 
-              {/* Navigation Arrows */}
               {/* Navigation Arrows */}
               <div className="flex items-center gap-1">
                 <button 

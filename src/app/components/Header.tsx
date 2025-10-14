@@ -43,6 +43,15 @@ const slides: Slide[] = [
     subtitle: "Designing smart devices and building innovative robots",
     bgImage: "/rob.jpg",
   },
+
+ {
+    id: 4,
+    title: "Innovation Through Competition",
+    subtitle: "Creating real-world solutions by learning through competitive innovation.",
+    bgImage: "/bal2.jpg",
+    
+  },
+  
 ];
 
 // Preload images immediately when module loads

@@ -1,5 +1,15 @@
-import React from 'react';
-import { Calendar, Code, Users, Building, ArrowRight } from 'lucide-react';
+"use client";
+
+import React from "react";
+import {
+  Calendar,
+  Code,
+  Users,
+  Building,
+  Rocket,
+  Briefcase,
+  Award,
+} from "lucide-react";
 
 const ExperienceTimeline = () => {
   const experiences = [
@@ -8,157 +18,192 @@ const ExperienceTimeline = () => {
       period: "2023 - Present",
       title: "Intern Software Engineer",
       company: "Company",
-      description: "During my tenure at the company, I gained valuable experience and contributed to various projects, enhancing my expertise in software development and problem-solving.",
-      icon: <Code className="w-5 h-5 sm:w-6 sm:h-6" />,
-      color: "bg-gradient-to-r from-blue-500 to-blue-600",
-      borderColor: "border-blue-200",
-      glowColor: "shadow-blue-100",
-      category: "Professional"
+      description:
+        "Contributed to multiple projects while developing strong skills in software development, teamwork, and creative problem-solving.",
+      icon: <Code className="w-6 h-6" />,
+      color: "cyan",
+      category: "Professional",
+      skills: ["Software Development", "Problem Solving", "Team Collaboration"],
     },
     {
       id: 2,
-      period: "2023 - Present", 
+      period: "2023 - Present",
       title: "Slasscom Member",
       company: "SLASSCOM",
-      description: "Active member of Sri Lanka Association of Software and Service Companies, contributing to the local tech ecosystem.",
-      icon: <Building className="w-5 h-5 sm:w-6 sm:h-6" />,
-      color: "bg-gradient-to-r from-green-500 to-emerald-600",
-      borderColor: "border-green-200",
-      glowColor: "shadow-green-100",
-      category: "Professional"
+      description:
+        "Active member of Sri Lanka Association of Software and Service Companies, contributing to the innovation ecosystem.",
+      icon: <Building className="w-6 h-6" />,
+      color: "emerald",
+      category: "Professional",
     },
     {
       id: 3,
       period: "2024 - Present",
       title: "Community Member",
       company: "Generation ALPHA",
-      description: "Engaged community member contributing to Generation ALPHA initiatives and programs.",
-      icon: <Users className="w-5 h-5 sm:w-6 sm:h-6" />,
-      color: "bg-gradient-to-r from-purple-500 to-indigo-600",
-      borderColor: "border-purple-200",
-      glowColor: "shadow-purple-100",
-      category: "Community"
-    }
+      description:
+        "Engaged member supporting community-driven technology initiatives and events.",
+      icon: <Users className="w-6 h-6" />,
+      color: "violet",
+      category: "Community",
+    },
   ];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 py-8 sm:py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16 sm:mb-24">
-          <div className="relative inline-block">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-lg opacity-20"></div>
-            <div className="relative inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full shadow-xl border-2 border-gray-100 mb-6">
-              <Calendar className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
-            </div>
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-4">
-            Professional Journey
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Exploring innovation through technology and community engagement
-          </p>
-        </div>
+  const colorMap = {
+    cyan: {
+      from: "from-cyan-400",
+      to: "to-blue-500",
+      text: "text-cyan-300",
+      glow: "shadow-cyan-500/30",
+    },
+    emerald: {
+      from: "from-emerald-400",
+      to: "to-teal-500",
+      text: "text-emerald-300",
+      glow: "shadow-emerald-500/30",
+    },
+    violet: {
+      from: "from-violet-400",
+      to: "to-purple-500",
+      text: "text-violet-300",
+      glow: "shadow-violet-500/30",
+    },
+  };
 
-        {/* Timeline - Centered Design */}
-        <div className="relative max-w-4xl mx-auto">
-          {/* Central Timeline Line */}
-          <div className="absolute left-1/2 transform -translate-x-px top-0 bottom-0 w-1 bg-gradient-to-b from-blue-300 via-green-300 to-purple-300 opacity-60"></div>
-          
-          {/* Timeline items - Alternating positions */}
-          <div className="space-y-16 sm:space-y-24">
-            {experiences.map((experience, index) => {
-              const isLeft = index % 2 === 0;
+  return (
+    <div
+      className="min-h-screen relative overflow-hidden"
+      style={{
+        backgroundImage: "url(cr.jpg)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      {/* Overlay with dynamic gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80 backdrop-blur-sm"></div>
+
+      {/* Floating gradient orbs */}
+      <div className="absolute top-0 left-0 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl animate-pulse"></div>
+
+      <div className="relative z-10 py-20 px-6">
+        <div className="max-w-7xl mx-auto text-center">
+          {/* Header */}
+          <div className="mb-20">
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-cyan-500 blur-2xl opacity-40"></div>
+                <Rocket className="relative w-12 h-12 text-cyan-400 animate-bounce" />
+              </div>
+            </div>
+            <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight mb-4">
+              <span className="text-white">My</span>{" "}
+              <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-400 bg-clip-text text-transparent">
+                Journey
+              </span>
+            </h1>
+            <p className="text-lg md:text-xl text-slate-300/90 max-w-2xl mx-auto">
+              A timeline of growth, innovation, and purpose.
+            </p>
+          </div>
+
+          {/* Experience Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            {experiences.map((exp, i) => {
+              const colors = colorMap[exp.color];
               return (
-                <div key={experience.id} className="relative">
-                  {/* Central Timeline Dot */}
-                  <div className="absolute left-1/2 transform -translate-x-1/2 z-20">
-                    <div className={`w-6 h-6 sm:w-8 sm:h-8 ${experience.color} rounded-full border-4 border-white shadow-xl flex items-center justify-center`}>
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  </div>
-                  
-                  {/* Content Card - Alternating sides */}
-                  <div className={`w-full sm:w-5/12 ${isLeft ? 'sm:mr-auto' : 'sm:ml-auto'} ${!isLeft ? 'sm:text-right' : ''}`}>
-                    {/* Period Badge */}
-                    <div className={`inline-flex items-center mb-4 ${!isLeft && 'sm:flex-row-reverse'}`}>
-                      <span className="bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-semibold border border-gray-200 shadow-sm">
-                        {experience.period}
-                      </span>
-                      <ArrowRight className={`w-4 h-4 text-gray-400 mx-3 ${!isLeft && 'sm:rotate-180'}`} />
-                    </div>
-                    
-                    {/* Main Card */}
-                    <div className={`group relative bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-2 ${experience.borderColor} overflow-hidden`}>
-                      {/* Gradient accent */}
-                      <div className={`absolute top-0 ${isLeft ? 'right-0' : 'left-0'} w-1 h-full ${experience.color}`}></div>
-                      
-                      <div className="p-6 sm:p-8">
-                        {/* Icon and Header */}
-                        <div className={`flex items-start gap-4 mb-6 ${!isLeft && 'sm:flex-row-reverse sm:text-right'}`}>
-                          <div className={`${experience.color} p-3 rounded-xl text-white shadow-lg ${experience.glowColor} flex-shrink-0`}>
-                            {experience.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className={`flex items-center gap-3 mb-2 ${!isLeft && 'sm:justify-end'}`}>
-                              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                                {experience.title}
-                              </h3>
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                                experience.category === 'Professional' 
-                                  ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                                  : 'bg-purple-50 text-purple-700 border border-purple-200'
-                              }`}>
-                                {experience.category}
-                              </span>
-                            </div>
-                            <p className="text-lg font-semibold text-gray-600 mb-1">
-                              {experience.company}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Description */}
-                        <p className="text-gray-700 leading-relaxed text-base mb-6">
-                          {experience.description}
-                        </p>
-                        
-                        {/* Skills for main role */}
-                        {experience.id === 1 && (
-                          <div className={`pt-6 border-t border-gray-100 ${!isLeft && 'sm:text-right'}`}>
-                            <h4 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">
-                              Key Expertise
-                            </h4>
-                            <div className={`flex flex-wrap gap-2 ${!isLeft && 'sm:justify-end'}`}>
-                              {['Software Development', 'Problem Solving', 'Project Contribution'].map((skill) => (
-                                <span key={skill} className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 font-medium border border-gray-200 hover:border-gray-300 transition-colors">
-                                  {skill}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                <div
+                  key={exp.id}
+                  className={`relative bg-white/10 border border-white/20 backdrop-blur-md rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:shadow-2xl hover:shadow-white/10 group`}
+                  style={{ animationDelay: `${i * 100}ms` }}
+                >
+                  {/* Top Accent */}
+                  <div
+                    className={`h-1 bg-gradient-to-r ${colors.from} ${colors.to}`}
+                  ></div>
+
+                  <div className="p-8">
+                    {/* Icon */}
+                    <div className="flex justify-center mb-6">
+                      <div
+                        className={`relative w-16 h-16 rounded-full flex items-center justify-center border border-white/20 bg-white/10 ${colors.glow} transition-transform duration-500 group-hover:scale-110`}
+                      >
+                        <div className={colors.text}>{exp.icon}</div>
                       </div>
-                      
-                      {/* Hover effect overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-blue-50 opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl"></div>
                     </div>
+
+                    {/* Period */}
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/80 text-xs font-semibold mb-4">
+                      <Calendar className="w-3 h-3" />
+                      {exp.period}
+                    </div>
+
+                    {/* Title & Company */}
+                    <h3 className="text-2xl font-bold text-white mb-2 transition-all group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-white group-hover:bg-clip-text group-hover:text-transparent">
+                      {exp.title}
+                    </h3>
+                    <div className="flex items-center justify-center gap-2 mb-4 text-slate-300/80">
+                      <Briefcase className={`w-4 h-4 ${colors.text}`} />
+                      {exp.company}
+                    </div>
+
+                    {/* Category */}
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mb-6 ${
+                        exp.category === "Professional"
+                          ? "bg-cyan-500/10 text-cyan-300 border border-cyan-500/30"
+                          : "bg-violet-500/10 text-violet-300 border border-violet-500/30"
+                      }`}
+                    >
+                      {exp.category}
+                    </span>
+
+                    {/* Description */}
+                    <p className="text-white/70 text-sm leading-relaxed mb-6">
+                      {exp.description}
+                    </p>
+
+                    {/* Skills */}
+                    {exp.skills && (
+                      <div className="pt-4 border-t border-white/10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Award className="w-4 h-4 text-white/60" />
+                          <h4 className="text-xs uppercase tracking-wider text-white/70 font-semibold">
+                            Expertise
+                          </h4>
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-2">
+                          {exp.skills.map((skill) => (
+                            <span
+                              key={skill}
+                              className="px-3 py-1 text-xs rounded-lg bg-white/10 border border-white/20 text-white/80 hover:bg-white/20 transition-all"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
 
-        {/* Enhanced Footer */}
-        <div className="text-center mt-20 sm:mt-32">
-          <div className="inline-block bg-white rounded-2xl shadow-lg px-8 py-6 border border-gray-100">
-            <p className="text-gray-700 font-medium text-lg mb-2">
-              🚀 Always Learning, Always Growing
-            </p>
-            <p className="text-gray-500 text-sm">
-              Ready for new challenges and opportunities
-            </p>
+          {/* Footer */}
+          <div className="mt-24">
+            <div className="inline-block relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-400 blur-2xl opacity-20 animate-pulse"></div>
+              <div className="relative px-10 py-6 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md">
+                <p className="text-lg font-bold bg-gradient-to-r from-cyan-300 via-emerald-300 to-violet-300 bg-clip-text text-transparent mb-2">
+                  ✨ Always Evolving
+                </p>
+                <p className="text-sm text-white/70">
+                  Open to meaningful collaborations and new challenges.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

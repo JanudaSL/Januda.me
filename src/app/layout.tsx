@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import Chatbot from "./components/Chatbot";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -16,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Januda",
-  description: "Developer,Traveller",
+  description: "Developer, Traveller",
 };
 
 export default function RootLayout({
@@ -28,8 +29,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <Navbar />
-        {children}  {/* This will render page content */}
+        {children}
         <Footer />
+        <Chatbot /> {/* ✅ Works fine now */}
       </body>
     </html>
   );
