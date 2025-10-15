@@ -31,7 +31,7 @@ export default function JanudaProjectsHero() {
       {/* Full-Width Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-         src="/cht.jpg"
+         src="/project.jpg"
           alt="Januda Projects Background"
           fill
           className="object-cover object-center"
