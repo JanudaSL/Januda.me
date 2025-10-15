@@ -29,26 +29,26 @@ const slides: Slide[] = [
     id: 1,
     title: "Crafting Innovative Software",
     subtitle: "Building modern web and mobile applications",
-    bgImage: "/coverse.jpg",
+    bgImage: "/coverse.webp",
   },
   {
     id: 2,
     title: "Exploring the World",
     subtitle: "Passionate about traveling and discovering new cultures",
-    bgImage: "/cover1.png",
+    bgImage: "/cover1.webp",
   },
   {
     id: 3,
     title: "IoT & Robotics Creations",
     subtitle: "Designing smart devices and building innovative robots",
-    bgImage: "/rob.jpg",
+    bgImage: "/rob.webp",
   },
 
  {
     id: 4,
     title: "Innovation Through Competition",
     subtitle: "Creating real-world solutions by learning through competitive innovation.",
-    bgImage: "/bal2.jpg",
+    bgImage: "/bal2.webp",
     
   },
   
