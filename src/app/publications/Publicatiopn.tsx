@@ -31,7 +31,7 @@ export default function JanudaProjectsHero() {
       {/* Full-Width Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/Project.jpg"
+         src="/Pub.jpg"
           alt="Januda Projects Background"
           fill
           className="object-cover object-center"
@@ -63,14 +63,14 @@ export default function JanudaProjectsHero() {
               className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 leading-tight"
               variants={itemFadeUp}
             >
-              Projects
+               Blogs
             </motion.h1>
 
             <motion.p
               className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 leading-relaxed font-light max-w-md lg:max-w-lg mt-48"
               variants={itemFadeUp}
             >
-              Discover a range of innovative software projects designed to solve real-world challenges with precision
+              Explore my collection of insightful blogs tailored to inspire, inform, and match your interests.
             </motion.p>
 
             <motion.div className="pt-4" variants={itemFadeUp}>
