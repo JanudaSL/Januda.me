@@ -29,17 +29,50 @@ export default function Chatbot() {
     }
   }, [messages]);
 
-  // Play alert sound and show notification after 10 seconds
+  // Auto-play alert sound and show notification after 5 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Play sound
-      if (audioRef.current) {
-        audioRef.current.play().catch(err => console.log("Audio play failed:", err));
-      }
-      // Show notification animation
+      // Show notification animation first
       setShowNotification(true);
-      setTimeout(() => setShowNotification(false), 3000);
-    }, 10000);
+      setTimeout(() => setShowNotification(false), 5000);
+      
+      // Auto-play sound - multiple attempts for better browser support
+      if (audioRef.current) {
+        // Set volume
+        audioRef.current.volume = 0.7;
+        
+        // Attempt 1: Direct play
+        const playPromise = audioRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              console.log("Alert sound played successfully");
+            })
+            .catch(err => {
+              console.log("Auto-play prevented by browser, trying alternative methods...");
+              
+              // Attempt 2: Play on any user interaction
+              const playOnInteraction = () => {
+                if (audioRef.current) {
+                  audioRef.current.play()
+                    .then(() => console.log("Sound played on user interaction"))
+                    .catch(e => console.log("Could not play sound:", e));
+                }
+                // Remove all listeners after first successful play
+                document.removeEventListener('click', playOnInteraction);
+                document.removeEventListener('touchstart', playOnInteraction);
+                document.removeEventListener('keydown', playOnInteraction);
+              };
+              
+              // Listen for multiple interaction types
+              document.addEventListener('click', playOnInteraction, { once: true });
+              document.addEventListener('touchstart', playOnInteraction, { once: true });
+              document.addEventListener('keydown', playOnInteraction, { once: true });
+            });
+        }
+      }
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -128,51 +161,73 @@ export default function Chatbot() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Floating Button
+  // Floating Button - Image shows clearly, transparent animations, alert message clearly visible
   if (!isOpen) {
     return (
       <div className="fixed right-6 bottom-6 z-50">
-        <button
-          onClick={() => setIsOpen(true)}
-          className={`group relative w-16 h-16 rounded-full shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-110 flex items-center justify-center ${showNotification ? 'animate-ring' : ''}`}
-          style={{
-            backgroundImage: "url('/jk2.png')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-          aria-label="Open chat"
-        >
-          {/* Hidden audio element - FIXED: moved inside button */}
-          <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/03/24/audio_4020e1bbf3.mp3" className="hidden" />
+        {/* Wrapper for ring animation - doesn't affect image clarity */}
+        <div className={`relative ${showNotification ? 'animate-ring' : ''}`}>
           
-          <div className="absolute inset-0 bg-black/20 rounded-full group-hover:bg-black/10 transition-all"></div>
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
-          
-          {/* Notification badge */}
+          {/* Green ring animations - transparent, behind button for alert system */}
           {showNotification && (
-            <div className="absolute -top-14 -right-4 bg-gradient-to-br from-gray-100 via-white to-gray-200 text-black text-xs font-semibold px-4 py-2 rounded-2xl shadow-xl animate-slideIn min-w-[280px] max-w-[320px] border-2 border-gray-300">
+            <>
+              {/* Outer expanding ring - transparent green for alert */}
+              <div className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-40 pointer-events-none"></div>
+              {/* Middle pulsing ring - transparent green gradient for alert */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 animate-pulse opacity-30 pointer-events-none"></div>
+              {/* Outer glow ring - transparent green with blur for alert */}
+              <div className="absolute inset-[-8px] rounded-full bg-green-300 animate-pulse-slow opacity-20 blur-md pointer-events-none"></div>
+            </>
+          )}
+          
+          {/* Main button - image displays clearly without blur */}
+          <button
+            onClick={() => setIsOpen(true)}
+            className="group relative w-16 h-16 rounded-full shadow-2xl hover:shadow-pink-500/60 transition-all duration-300 hover:scale-110 overflow-hidden"
+            aria-label="Open chat"
+          >
+            {/* Audio element for notification sound */}
+            <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/03/24/audio_4020e1bbf3.mp3" className="hidden" />
+            
+            {/* Clear image display - NOT blurred */}
+            <img 
+              src="/jk2.png" 
+              alt="Chat with Januda"
+              className="w-full h-full object-cover"
+            />
+            
+            {/* Subtle hover overlay - transparent */}
+            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all pointer-events-none"></div>
+            
+            {/* Green online status indicator */}
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse shadow-lg"></div>
+          </button>
+          
+          {/* Alert notification message - transparent box with white background */}
+          {showNotification && (
+            <div className="absolute -top-20 -right-6 bg-white/95 backdrop-blur-sm text-gray-800 text-sm font-medium px-5 py-3 rounded-2xl shadow-2xl animate-slideIn min-w-[280px] max-w-[320px] border border-gray-200 z-20">
               <div className="relative">
-                <div className="flex items-start gap-2">
-                  <span className="text-lg flex-shrink-0 animate-wave">👋</span>
-                  <p className="leading-relaxed text-black">
-                    <span className="font-bold text-black">Hey there!</span><br/>
-                    Ask me about Januda&apos;s skills, projects & experience!
-                  </p>
+                <div className="flex items-start gap-3">
+                  {/* Animated waving hand emoji icon with transparent background */}
+                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full flex items-center justify-center">
+                    <span className="text-2xl animate-wave-hand">👋</span>
+                  </div>
+                  {/* Message text - gray text on transparent white */}
+                  <div className="flex-1 pt-0.5">
+                    <p className="leading-relaxed">
+                      <span className="font-bold text-gray-900 block mb-1">Hey there!</span>
+                      <span className="text-gray-600 text-xs">Ask me about Januda&apos;s skills, projects & experience!</span>
+                    </p>
+                  </div>
                 </div>
-                {/* Speech bubble tail */}
-                <div className="absolute -bottom-4 right-8 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[16px] border-t-gray-200"></div>
+                {/* Speech bubble tail pointing to button - white color */}
+                <div className="absolute -bottom-6 right-10">
+                  <div className="w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[20px] border-t-white/95 drop-shadow-lg"></div>
+                </div>
               </div>
             </div>
           )}
-          
-          {/* Ring effect */}
-          {showNotification && (
-            <>
-              <div className="absolute inset-0 rounded-full bg-purple-500 animate-ping opacity-75"></div>
-              <div className="absolute inset-0 rounded-full bg-purple-400 animate-pulse"></div>
-            </>
-          )}
-        </button>
+        </div>
       </div>
     );
   }
@@ -358,19 +413,22 @@ export default function Chatbot() {
         }
         @keyframes ring {
           0%, 100% {
-            transform: rotate(0deg);
+            transform: rotate(0deg) scale(1);
           }
           10%, 30% {
-            transform: rotate(-10deg);
+            transform: rotate(-12deg) scale(1.05);
           }
           20%, 40% {
-            transform: rotate(10deg);
+            transform: rotate(12deg) scale(1.05);
+          }
+          50% {
+            transform: rotate(0deg) scale(1);
           }
         }
         @keyframes slideIn {
           from {
             opacity: 0;
-            transform: translateY(-10px) scale(0.95);
+            transform: translateY(-20px) scale(0.9);
           }
           to {
             opacity: 1;
@@ -388,18 +446,73 @@ export default function Chatbot() {
             transform: rotate(-20deg);
           }
         }
+        @keyframes wave-hand {
+          0% {
+            transform: rotate(0deg);
+          }
+          10% {
+            transform: rotate(14deg);
+          }
+          20% {
+            transform: rotate(-8deg);
+          }
+          30% {
+            transform: rotate(14deg);
+          }
+          40% {
+            transform: rotate(-4deg);
+          }
+          50% {
+            transform: rotate(10deg);
+          }
+          60% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(0deg);
+          }
+        }
+        @keyframes bounce-slow {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
+        }
+        @keyframes pulse-slow {
+          0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(1.05);
+          }
+        }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
         }
         .animate-ring {
-          animation: ring 0.5s ease-in-out infinite;
+          animation: ring 0.6s ease-in-out;
         }
         .animate-slideIn {
-          animation: slideIn 0.4s ease-out;
+          animation: slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .animate-wave {
           animation: wave 0.6s ease-in-out infinite;
           display: inline-block;
+        }
+        .animate-wave-hand {
+          animation: wave-hand 1.2s ease-in-out infinite;
+          display: inline-block;
+          transform-origin: 70% 70%;
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 2s ease-in-out infinite;
+        }
+        .animate-pulse-slow {
+          animation: pulse-slow 3s ease-in-out infinite;
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
