@@ -409,10 +409,7 @@ const TestimonialsCarousel: React.FC = () => {
               <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-6 sm:mb-8">
                 Authentic stories and endorsements from satisfied clients.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg w-full sm:w-fit">
-                  About Me
-                </button>
+           
                 <button 
                   onClick={handleYourFeedbackClick}
                   className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 w-full sm:w-fit"
