@@ -89,7 +89,7 @@ const TestimonialsCarousel: React.FC = () => {
       role: "Research Engineer, SUTD",
       image: "https://ik.imagekit.io/9dtagplxz/WhatsApp%20Image%202025-09-19%20at%2022.50.30_6a4c9f03.jpg?updatedAt=1758302547543",
       rating: 4,
-      text: "By introducing AI-based innovations, AiGROW helps overcome labor shortages while increasing youth engagement in farming. Their technologies make agriculture more appealing and accessible to a new generation of farmers, fostering long-term sustainability in the sector."
+      text: "Working with Januda has been a truly rewarding experience. He consistently demonstrates exceptional technical expertise, dedication, and a proactive approach to every task. His ability to think critically and find innovative solutions to challenges sets him apart. Beyond his skills, Januda’s positive attitude, teamwork, and strong communication make him a valuable asset to any team or organization."
     },
     {
       id: 2,
