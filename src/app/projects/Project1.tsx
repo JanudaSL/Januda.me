@@ -54,7 +54,7 @@ export default function JanudaProjectsCards() {
       description: "A versatile IoT-enabled robot car powered by ESP32, featuring remote control, real-time monitoring, obstacle avoidance, and line tracking. This project integrates various sensors, motors, and wireless communication technologies to build an intelligent autonomous vehicle with seamless remote operation.",
       badge: "IoT Solution",
       technologies: ["React", "MySql", "C++", "WebSocket / HTTP server"],
-      link: "https://kjanuda.github.io/ESP32-Robot-Car-/"
+      link: "https://janudasl.github.io/Smart-Robot-Car-with-ESP32-CAM/"
     },
     {
       title: "ESP32 Weather & Air Quality Monitoring System",
@@ -63,7 +63,7 @@ export default function JanudaProjectsCards() {
       description: "This project demonstrates a complete IoT weather and air quality monitoring system using ESP32 microcontroller with various sensors. The system collects environmental data in real-time, processes it, and presents it through a modern React.js dashboard, with data storage in a MySQL database accessed via PHP backend.",
       badge: "IoT & Embedded Systems",
       technologies: ["ReactJs", "PHP", "MYSql", "C++"],
-      link: "https://kjanuda.github.io/ESP32-Weather-Air-Quality-/"
+      link: "https://janudasl.github.io/ESP32-Weather-Air-Quality-Monitoring-System/"
     },
     {
       title: "WeBeats Music campaign page",
