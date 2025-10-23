@@ -16,7 +16,7 @@ export default function HomePage() {
       <About />
       <Skill />
       <Offer />
-      <Exp />
+    
       <Recomnd />
       <Hire />
       <Other />
