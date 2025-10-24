@@ -37,7 +37,7 @@ export default function AboutJanuda() {
               </div>
               
               <p className="text-lg sm:text-xl md:text-2xl text-gray-200 font-light leading-relaxed max-w-2xl">
-                Software Engineer | Student at University Of Colombo | Lifelong learner
+                Software Engineer |  | Lifelong learner
               </p>
             </div>
           </div>
