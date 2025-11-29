@@ -13,7 +13,7 @@ export default function AboutJanuda() {
     <div 
       className="min-h-screen relative overflow-hidden bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: "url('/cvr.png')"
+        backgroundImage: "url('/cvr2.jpg')"
       }}
     >
       {/* Mobile-optimized overlay */}
