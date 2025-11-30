@@ -13,8 +13,9 @@ const TeamCarousel = () => {
       id: 1,
       title: "Want to work together!",
       subtitle: "I'm available for Freelance Work.",
-      buttonText: "Contact Me Via Fiverr ",
-      bgImage: "/jk1.png"
+      buttonText: "Contact Me Via upwork ",
+      bgImage: "/jk1.png",
+  
     }
   ], []);
 
@@ -93,7 +94,7 @@ const TeamCarousel = () => {
           >
             {/* Background Image with darker overlay */}
             <div 
-              className="relative w-full h-full bg-cover bg-center bg-no-repeat"
+              className="relative w-full h-full bg-cover bg-center bg-no-repeat bg-fixed"
               style={{
                 backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(${slide.bgImage})`
               }}
@@ -113,10 +114,15 @@ const TeamCarousel = () => {
                   </p>
 
                   {/* CTA Button */}
-                  <button className="group inline-flex items-center px-8 py-4 bg-transparent border-2 border-white text-white font-semibold text-lg tracking-widest hover:bg-white hover:text-black transition-all duration-300 transform hover:scale-105">
+                  <a 
+                    href="https://www.upwork.com/freelancers/~01c898488a923ed2f7?mp_source=share"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center px-8 py-4 bg-transparent border-2 border-white text-white font-semibold text-lg tracking-widest hover:bg-white hover:text-black transition-all duration-300 transform hover:scale-105"
+                  >
                     {slide.buttonText}
                     <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                  </button>
+                  </a>
                 </div>
               </div>
 
