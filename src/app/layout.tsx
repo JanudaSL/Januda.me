@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";   // ✅ ADD THIS
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -27,11 +28,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+
+      {/* ✅ ADD THIS HEAD */}
+      <head>
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4481173940421216"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      </head>
+
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <Navbar />
         {children}
         <Footer />
-        <Chatbot /> {/* ✅ Works fine now */}
+        <Chatbot />
       </body>
     </html>
   );
