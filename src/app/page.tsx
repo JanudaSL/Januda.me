@@ -8,6 +8,7 @@ import Recomnd from './components/Recomnd';
 import Hire from './components/Hire';
 import Other from './components/Other';
 
+
 export default function HomePage() {
   return (
     <>
