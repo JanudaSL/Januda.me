@@ -1,15 +1,16 @@
-import Publication from "./Publicatiopn";
-import Publications from "./publications";
+import type { Metadata } from "next";
+import Pub1 from "./pub";
+import Publicatiopn from './Publicatiopn'
 
+export const metadata: Metadata = {
+  title: "Publications",
+};
 
-
-
-export default function PiblicationPage() {
+export default function publications() {
   return (
-    <section className="min-h-screen px-0 py-0">
-      
-      <Publication />
-      <Publications />
+    <section className="px-0 py-0">
+       <Publicatiopn />
+      <Pub1 />
      
     </section>
   );
