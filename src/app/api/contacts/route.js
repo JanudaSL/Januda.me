@@ -4,12 +4,17 @@ import fs from "fs/promises";
 import path from "path";
 
 const DATA_FILE = path.join(process.cwd(), "data", "contact-submissions.json");
+const SHOULD_PERSIST_LOCAL = process.env.NODE_ENV !== "production";
 const PDF_PATH = path.join(process.cwd(), "public", "jk.pdf");
 const COMPANY_NAME = process.env.COMPANY_NAME || "Januda";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.EMAIL_USER || "janudakodi@gmail.com";
 const FROM_EMAIL = process.env.EMAIL_FROM || process.env.EMAIL_USER || "janudakodi@gmail.com";
 
 function createTransporter() {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error("Email credentials are not configured. Please set EMAIL_USER and EMAIL_PASS.");
+  }
+
   return nodemailer.createTransport({
     host: process.env.EMAIL_HOST || "smtp.gmail.com",
     port: Number(process.env.EMAIL_PORT || 587),
@@ -35,6 +40,10 @@ async function ensureDataFile() {
 }
 
 async function saveSubmission(entry) {
+  if (!SHOULD_PERSIST_LOCAL) {
+    return entry;
+  }
+
   const submissions = await ensureDataFile();
   submissions.push(entry);
   await fs.writeFile(DATA_FILE, JSON.stringify(submissions, null, 2));
@@ -42,6 +51,10 @@ async function saveSubmission(entry) {
 }
 
 async function updateSubmission(id, updates) {
+  if (!SHOULD_PERSIST_LOCAL) {
+    return { id, ...updates };
+  }
+
   const submissions = await ensureDataFile();
   const target = submissions.find((item) => item.id === id);
   if (!target) return null;
@@ -120,7 +133,9 @@ export async function POST(request) {
       );
     }
 
-    await saveSubmission(payload);
+    if (SHOULD_PERSIST_LOCAL) {
+      await saveSubmission(payload);
+    }
 
     const transporter = createTransporter();
     const attachmentExists = await fs
@@ -170,7 +185,9 @@ export async function POST(request) {
       payload.emailStatus.user = "skipped";
     }
 
-    await updateSubmission(payload.id, payload);
+    if (SHOULD_PERSIST_LOCAL) {
+      await updateSubmission(payload.id, payload);
+    }
 
     return NextResponse.json({
       success: true,
