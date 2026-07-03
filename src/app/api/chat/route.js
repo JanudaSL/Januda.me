@@ -202,9 +202,9 @@ Please provide a helpful and professional response:`;
       );
     }
 
-    // Generic error response
+    // Return the real error message for debugging
     return NextResponse.json(
-      { error: 'Failed to process request. Please try again later.' },
+      { error: error.message || 'Failed to process request. Please try again later.' },
       { status: 500 }
     );
   }
