@@ -205,6 +205,24 @@ const Skills = () => {
     "linear-gradient(to bottom, black 0%, black 58%, rgba(0,0,0,0.9) 68%, rgba(0,0,0,0.68) 78%, rgba(0,0,0,0.42) 87%, rgba(0,0,0,0.18) 94%, transparent 100%)";
   const portraitMask = isDesktop ? desktopMask : mobileMask;
 
+  // Staggered entrance: eyebrow → heading → subcopy → divider → rows each
+  // ease in slightly after the one before, instead of the whole block
+  // popping in at once.
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: { staggerChildren: 0.12, delayChildren: 0.08 },
+    },
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 22 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
+
   return (
     <>
       <style jsx>{`
@@ -281,28 +299,46 @@ const Skills = () => {
               stacks BELOW the image on mobile (order-2) so the image still
               reads first on a phone-width layout. */}
           <div className="order-2 lg:order-1 flex items-center">
-            <div
+            <motion.div
               ref={content.ref}
-              className={`reveal ${content.visible ? "visible" : ""} w-full px-5 sm:px-12 lg:px-16 py-10 sm:py-12 lg:py-16`}
+              variants={containerVariants}
+              initial="hidden"
+              animate={content.visible ? "visible" : "hidden"}
+              className="w-full px-5 sm:px-12 lg:px-16 py-10 sm:py-12 lg:py-16"
             >
-              <p className="font-sans-brand text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-[#6E8C6A] mb-3 sm:mb-4">
+              <motion.p
+                variants={itemVariants}
+                className="font-sans-brand text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-[#6E8C6A] mb-3 sm:mb-4"
+              >
                 CAPABILITIES
-              </p>
+              </motion.p>
 
-              <h2 className="font-display-brand text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-[#0E1116] leading-[0.95] mb-3 sm:mb-4">
+              <motion.h2
+                variants={itemVariants}
+                className="font-display-brand text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-[#0E1116] leading-[0.95] mb-3 sm:mb-4"
+              >
                 My <span className="text-[#E8A33D]">Skills</span>
-              </h2>
+              </motion.h2>
 
-              <p className="font-sans-brand text-sm sm:text-base lg:text-lg text-[#6B7280] font-normal mb-6 sm:mb-8">
+              <motion.p
+                variants={itemVariants}
+                className="font-sans-brand text-sm sm:text-base lg:text-lg text-[#6B7280] font-normal mb-6 sm:mb-8"
+              >
                 Tools and technologies I work with to build amazing things.
-              </p>
+              </motion.p>
 
-              <div className="h-px bg-[#E6E4DF] mb-2" />
+              <motion.div
+                variants={itemVariants}
+                className="h-px bg-[#E6E4DF] mb-2 origin-left"
+              />
 
               {isMounted && (
                 <>
                   {/* Skills Row */}
-                  <div className="relative flex w-full flex-col items-center justify-center overflow-hidden py-6">
+                  <motion.div
+                    variants={itemVariants}
+                    className="relative flex w-full flex-col items-center justify-center overflow-hidden py-6"
+                  >
                     <div className="animate-scroll flex items-center space-x-8 sm:space-x-10 whitespace-nowrap">
                       {skills.map((skill, index) => (
                         <div
@@ -333,12 +369,18 @@ const Skills = () => {
                     </div>
                     <div className="pointer-events-none absolute inset-y-0 left-0 w-1/6 bg-gradient-to-r from-[#FAFAF8] via-[#FAFAF8]/80 to-transparent z-20" />
                     <div className="pointer-events-none absolute inset-y-0 right-0 w-1/6 bg-gradient-to-l from-[#FAFAF8] via-[#FAFAF8]/80 to-transparent z-20" />
-                  </div>
+                  </motion.div>
 
-                  <div className="h-px bg-[#E6E4DF] my-2" />
+                  <motion.div
+                    variants={itemVariants}
+                    className="h-px bg-[#E6E4DF] my-2 origin-left"
+                  />
 
                   {/* Tools Row (Opposite Direction) */}
-                  <div className="relative flex w-full flex-col items-center justify-center overflow-hidden py-6">
+                  <motion.div
+                    variants={itemVariants}
+                    className="relative flex w-full flex-col items-center justify-center overflow-hidden py-6"
+                  >
                     <div className="animate-scroll-reverse flex items-center space-x-8 sm:space-x-10 whitespace-nowrap">
                       {tools.map((tool, index) => (
                         <div
@@ -369,10 +411,10 @@ const Skills = () => {
                     </div>
                     <div className="pointer-events-none absolute inset-y-0 left-0 w-1/6 bg-gradient-to-r from-[#FAFAF8] via-[#FAFAF8]/80 to-transparent z-20" />
                     <div className="pointer-events-none absolute inset-y-0 right-0 w-1/6 bg-gradient-to-l from-[#FAFAF8] via-[#FAFAF8]/80 to-transparent z-20" />
-                  </div>
+                  </motion.div>
                 </>
               )}
-            </div>
+            </motion.div>
           </div>
 
           {/* Image — full bleed, now the RIGHT column on desktop (order-2)
@@ -390,9 +432,9 @@ const Skills = () => {
               src="/jpur.jpeg"
               alt="Januda J"
               className="w-full h-full object-cover"
-              initial={{ opacity: 0, scale: 1.15 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, scale: 1.18, filter: "blur(14px)" }}
+              animate={{ opacity: 1, filter: "blur(0px)" }}
+              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 objectPosition: "50% 20%",
                 filter: "contrast(1.08) saturate(1.08) brightness(1.01)",

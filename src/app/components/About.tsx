@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 
 /* ── design tokens ──────────────────────────────────────────────
    ink    #0E1116  text on light / dark surfaces
@@ -12,7 +13,8 @@ import React, { useEffect, useRef, useState } from 'react';
    Concept: simple, full-bleed two-column layout — no fixed background,
    no parallax, no typing engine. Photo runs edge-to-edge on one side
    at full width/height on desktop; content sits in a plain column on
-   the other. One quiet scroll-reveal fade, nothing else moving.
+   the other. A staggered scroll-reveal brings the content in piece by
+   piece, and the photo eases in with a soft blur-to-focus entrance.
 
    Layout: image on the LEFT, content on the RIGHT (desktop). Mobile
    still stacks image above content.
@@ -38,6 +40,24 @@ function useScrollReveal(threshold = 0.15) {
 
 const FOCUS_AREAS = ['Mentoring', 'Student communities', 'Software engineering'];
 
+// Staggered entrance: eyebrow → name → tagline → divider → bio → quote →
+// tags → status dot each ease in slightly after the one before, instead
+// of the whole block popping in at once.
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.12, delayChildren: 0.08 },
+  },
+};
+const itemVariants = {
+  hidden: { opacity: 0, y: 22 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
 export default function AboutJanuda() {
   const content = useScrollReveal(0.1);
 
@@ -48,13 +68,6 @@ export default function AboutJanuda() {
 
         .font-sans-brand { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
         .font-display-brand { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
-
-        .reveal {
-          opacity: 0;
-          transform: translateY(16px);
-          transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        .reveal.visible { opacity: 1; transform: translateY(0); }
 
         .tag {
           border: 1px solid #E6E4DF;
@@ -93,7 +106,8 @@ export default function AboutJanuda() {
           {/* Image — full bleed, edge to edge, full height of the row on desktop.
               On mobile the section stacks (image above content), so no fade mask —
               just a clean, sharp photo at a shorter, thumb-friendly height.
-              Desktop: sits on the LEFT column now. */}
+              Desktop: sits on the LEFT column now. Eases in with a soft
+              blur-to-focus + scale entrance instead of just popping in. */}
           <div className="order-1 lg:order-1 w-full h-[38vh] xs:h-[42vh] sm:h-[50vh] lg:h-auto relative overflow-hidden">
             {/* Hidden SVG filter: a real unsharp-mask style convolution,
                 not just a contrast/saturate fake — sharpens actual edge detail. */}
@@ -108,10 +122,13 @@ export default function AboutJanuda() {
                 />
               </filter>
             </svg>
-            <img
+            <motion.img
               src="/cvr2.jpg"
               alt="Januda J"
               className="about-photo w-full h-full object-cover"
+              initial={{ opacity: 0, scale: 1.18, filter: 'blur(14px)' }}
+              animate={{ opacity: 1, filter: 'blur(0px)' }}
+              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 objectPosition: '50% 15%',
                 filter: 'url(#sharpenAbout)',
@@ -131,35 +148,53 @@ export default function AboutJanuda() {
           {/* Content — plain column, generous padding, nothing floating on top of the photo.
               Desktop: sits on the RIGHT column now. */}
           <div className="order-2 lg:order-2 flex items-center">
-            <div
+            <motion.div
               ref={content.ref}
-              className={`reveal ${content.visible ? 'visible' : ''} w-full px-5 sm:px-12 lg:px-16 py-10 sm:py-12 lg:py-0 max-w-xl`}
+              variants={containerVariants}
+              initial="hidden"
+              animate={content.visible ? 'visible' : 'hidden'}
+              className="w-full px-5 sm:px-12 lg:px-16 py-10 sm:py-12 lg:py-0 max-w-xl"
             >
-              <p className="font-sans-brand text-xs font-medium tracking-[0.2em] uppercase text-[#6E8C6A] mb-3 sm:mb-4">
+              <motion.p
+                variants={itemVariants}
+                className="font-sans-brand text-xs font-medium tracking-[0.2em] uppercase text-[#6E8C6A] mb-3 sm:mb-4"
+              >
                 ABOUT
-              </p>
+              </motion.p>
 
-              <h1 className="font-display-brand text-4xl xs:text-5xl sm:text-6xl lg:text-7xl font-light tracking-tight text-[#0E1116] leading-[0.95] mb-3 sm:mb-4">
+              <motion.h1
+                variants={itemVariants}
+                className="font-display-brand text-4xl xs:text-5xl sm:text-6xl lg:text-7xl font-light tracking-tight text-[#0E1116] leading-[0.95] mb-3 sm:mb-4"
+              >
                 Januda <span className="text-[#E8A33D]">J</span>
-              </h1>
+              </motion.h1>
 
-              <p className="font-sans-brand text-sm sm:text-lg text-[#6B7280] font-normal mb-6 sm:mb-8">
+              <motion.p
+                variants={itemVariants}
+                className="font-sans-brand text-sm sm:text-lg text-[#6B7280] font-normal mb-6 sm:mb-8"
+              >
                 Software Engineer &nbsp;·&nbsp; Lifelong Learner
-              </p>
+              </motion.p>
 
-              <div className="h-px bg-[#E6E4DF] mb-6 sm:mb-8" />
+              <motion.div variants={itemVariants} className="h-px bg-[#E6E4DF] mb-6 sm:mb-8 origin-left" />
 
-              <p className="font-sans-brand text-sm sm:text-base text-[#374151] leading-relaxed mb-6 sm:mb-8">
+              <motion.p
+                variants={itemVariants}
+                className="font-sans-brand text-sm sm:text-base text-[#374151] leading-relaxed mb-6 sm:mb-8"
+              >
                 I want to inspire student communities as much as possible with all my
                 skills and capabilities — a purpose-driven community, globally, instead
                 of everyone going with the flow.
-              </p>
+              </motion.p>
 
-              <p className="font-sans-brand text-sm text-[#6B7280] italic mb-6 sm:mb-8">
+              <motion.p
+                variants={itemVariants}
+                className="font-sans-brand text-sm text-[#6B7280] italic mb-6 sm:mb-8"
+              >
                 "If we can change the way we see the world, we can change the world we see."
-              </p>
+              </motion.p>
 
-              <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
+              <motion.div variants={itemVariants} className="flex flex-wrap gap-2 mb-6 sm:mb-8">
                 {FOCUS_AREAS.map((f) => (
                   <span
                     key={f}
@@ -168,18 +203,13 @@ export default function AboutJanuda() {
                     {f}
                   </span>
                 ))}
-              </div>
+              </motion.div>
 
-              <div className="inline-flex items-center gap-2.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#6E8C6A] opacity-60" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#6E8C6A]" />
-                </span>
-                <span className="font-sans-brand text-xs sm:text-sm text-[#6B7280]">
-                  Building &amp; learning in public
-                </span>
-              </div>
-            </div>
+              <motion.div variants={itemVariants} className="inline-flex items-center gap-2.5">
+                
+                
+              </motion.div>
+            </motion.div>
           </div>
 
         </div>
