@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize Gemini client (only if API key exists)
-let genAI = null;
-if (process.env.GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-}
-
 // Comprehensive knowledge base about Januda from his profile
 const JANUDA_CONTEXT = `
 You are Januda's personal AI assistant chatbot. You have access to his complete professional profile and should answer questions helpfully, professionally, and conversationally.
@@ -130,9 +124,12 @@ export async function POST(request) {
       );
     }
 
-    // Get the generative model
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-3.5-flash',
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const genAI = new GoogleGenerativeAI(geminiKey);
+    const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+
+    const model = genAI.getGenerativeModel({
+      model: modelName,
       generationConfig: {
         temperature: 0.7,
         topP: 0.8,
@@ -157,7 +154,18 @@ Instructions:
 Please provide a helpful and professional response:`;
 
     const result = await model.generateContent(prompt);
-    const answer = result.response?.text?.() || 'Sorry, I could not generate a response. Please try again.';
+    const response = result.response;
+    let answer = 'Sorry, I could not generate a response. Please try again.';
+
+    if (response) {
+      if (typeof response.text === 'function') {
+        answer = response.text();
+      } else if (response.candidates?.[0]?.content) {
+        answer = Array.isArray(response.candidates[0].content)
+          ? response.candidates[0].content.map((part) => part.text || '').join('')
+          : response.candidates[0].content.text || answer;
+      }
+    }
 
     return NextResponse.json({ 
       answer: answer.trim(),
@@ -181,6 +189,10 @@ Please provide a helpful and professional response:`;
         { error: 'API quota exceeded. Please try again later.' },
         { status: 429 }
       );
+    }
+
+    if (error instanceof Error && error.stack) {
+      console.error('Gemini stack trace:', error.stack);
     }
 
     if (error.message?.includes('safety') || error.message?.includes('SAFETY')) {
