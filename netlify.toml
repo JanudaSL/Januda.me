@@ -1,0 +1,6 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "EMAIL_USER,EMAIL_PASS,EMAIL_HOST,EMAIL_PORT,EMAIL_FROM,ADMIN_EMAIL,GEMINI_API_KEY,COMPANY_NAME"

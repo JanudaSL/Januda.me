@@ -1,0 +1,49 @@
+[33ma3457b8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Update portfolio section
+[33mde13288[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m update: fix render port + mongodb connectiujlofn
+[33m375b450[m update: fix render port + mongodb connectiujlon
+[33ma8e873b[m update: fix render port + mongodb connection
+[33m3d2e180[m seo update
+[33mf3b7c40[m Add Google AdSense meta tag for verification
+[33mb3a62de[m Update next-intl to 4.8.3 (properly saved to package.json)
+[33mcca669d[m Downgrade to Next.js 15.1.6 to fix CVE-2025-55182
+[33me0028e5[m Update layout.tsx
+[33m5c1dcb3[m Update Hire.tsx
+[33mb9788e9[m Update About.tsx
+[33m6bcc768[m Add files via upload
+[33mf33debc[m Update route.js
+[33m3c05598[m Update Header.tsx
+[33m0a60b30[m Update About.tsx
+[33m373aec6[m Update page.tsx
+[33mc053e01[m Update Project1.tsx
+[33m75ccc44[m Update Navbar.tsx
+[33m415c709[m Add files via upload
+[33m3477aaa[m Update Chatbot.jsx
+[33ma5f9db3[m Update Header.tsx
+[33mb5697fc[m Add files via upload
+[33m99cec3b[m Add files via upload
+[33me1bfa6e[m Add files via upload
+[33m8bedeec[m Add files via upload
+[33m83dd507[m Update Recomnd.tsx
+[33m7164b01[m Update Recomnd.tsx
+[33m1206c96[m Update Recomnd.tsx
+[33mb7339a6[m Update Publicatiopn.tsx
+[33m79c9644[m Update Publicatiopn.tsx
+[33mec0a3db[m Update Publicatiopn.tsx
+[33m05497e5[m Update Publicatiopn.tsx
+[33m295c80d[m Update Publicatiopn.tsx
+[33m8dc2aa5[m Describe your changes here
+[33m9165251[m Describe your changes here
+[33m381df9e[m Add files via upload
+[33mad77809[m first commit
+[33mabfd5c4[m Added new feature in my-new-branch
+[33m064454d[m Added new feature in my-new-branch
+[33m7e5c7ec[m Added new feature in my-new-branch
+[33mbb260e4[m Added new feature in my-new-branch
+[33ma6c79a2[m Added new feature in my-new-branch2
+[33m1fe7d0c[m Added new feature in my-new-branch1
+[33mb8f143b[m Added new feature in my-new-branch
+[33m4439d1f[m Merge pull request #1 from kjanuda/new-branch-name
+[33ma39b322[m Your commit message
+[33m5b576e9[m first commit
+[33m51505cb[m first commit
+[33m811162a[m Initial commit from Create Next App
