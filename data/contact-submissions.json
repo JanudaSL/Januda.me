@@ -1,0 +1,115 @@
+[
+  {
+    "id": "6a3fcbf4-4dfe-48cc-9229-a5d275ac1129",
+    "fullName": "Test User",
+    "email": "janudakodi@gmail.com",
+    "phone": "+94770000000",
+    "country": "Sri Lanka",
+    "interested": "Software-Development",
+    "message": "This is a verification test from the local workflow.",
+    "submittedAt": "2026-07-02T00:00:00.000Z",
+    "emailStatus": {
+      "admin": "sent",
+      "user": "sent"
+    }
+  },
+  {
+    "id": "ff8563e6-1b3c-4359-aee6-7269bfabf98d",
+    "fullName": "mhi",
+    "email": "project360aa00@gmail.com",
+    "phone": "0702251237",
+    "country": "Sri Lanka",
+    "interested": "System-Integration",
+    "message": "help me januda",
+    "submittedAt": "2026-07-02T15:13:45.752Z",
+    "emailStatus": {
+      "admin": "sent",
+      "user": "sent"
+    }
+  },
+  {
+    "id": "06acc166-a378-4ced-9c93-418b2181962d",
+    "fullName": "Januda Janandith Kodithuwakku",
+    "email": "janudakodi@gmail.com",
+    "phone": "0702251237",
+    "country": "Sri Lanka",
+    "interested": "Software-Development",
+    "message": "fhyf  frgh gredgrfg",
+    "submittedAt": "2026-07-02T15:39:56.286Z",
+    "emailStatus": {
+      "admin": "sent",
+      "user": "sent"
+    }
+  },
+  {
+    "id": "88178548-e917-458f-8d7c-6a90b189291c",
+    "fullName": "Januda Janandith",
+    "email": "janudakodi@gmail.com",
+    "phone": "0773007426",
+    "country": "Sri Lanka",
+    "interested": "Software-Development",
+    "message": "dfgd dsfgrfds dgsdfg",
+    "submittedAt": "2026-07-02T15:58:57.942Z",
+    "emailStatus": {
+      "admin": "sent",
+      "user": "sent"
+    }
+  },
+  {
+    "id": "826b1614-89f9-4cda-9629-689ac91e624e",
+    "fullName": "Januda Janandith Kodithuwakku",
+    "email": "janudakodi@gmail.com",
+    "phone": "0702251237",
+    "country": "Sri Lanka",
+    "interested": "Software-Development",
+    "message": "hi help me",
+    "submittedAt": "2026-07-02T16:41:49.632Z",
+    "emailStatus": {
+      "admin": "sent",
+      "user": "sent"
+    }
+  },
+  {
+    "id": "b32a3e2c-0195-4831-9b24-a52a0dbee1da",
+    "fullName": "Januda Janandith",
+    "email": "janudakodi@gmail.com",
+    "phone": "0773007426",
+    "country": "Sri Lanka",
+    "interested": "Software-Development",
+    "message": "rfg ghft fhyrfgyh",
+    "submittedAt": "2026-07-02T16:52:06.158Z",
+    "emailStatus": {
+      "admin": "sent",
+      "user": "sent"
+    }
+  },
+  {
+    "id": "69c2dd07-9234-456e-aa9f-2ea311f8dba1",
+    "fullName": "Januda Janandith",
+    "email": "janudakodi@gmail.com",
+    "phone": "0773007426",
+    "country": "Sri Lanka",
+    "interested": "",
+    "message": "help me  ef etfg rgfder dfg dfed grfg rfg rgre reg gedf",
+    "submittedAt": "2026-07-02T19:31:06.454Z",
+    "emailStatus": {
+      "admin": "sent",
+      "user": "sent"
+    }
+  },
+  {
+    "id": "823cf160-22b2-4ed5-aaf3-a7271f74de41",
+    "fullName": "Januda Janandith",
+    "email": "janudakodi@gmail.com",
+    "phone": "0773007426",
+    "country": "Sri Lanka",
+    "interested": "Integration",
+    "subscribe": true,
+    "message": "yhgr rtgreetg trtgretre",
+    "submittedAt": "2026-07-03T03:55:52.759Z",
+    "emailStatus": {
+      "admin": "sent",
+      "user": "sent"
+    }
+  }
+]

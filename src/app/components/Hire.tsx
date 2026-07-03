@@ -14,7 +14,7 @@ const TeamCarousel = () => {
       title: "Want to work together!",
       subtitle: "I'm available for Freelance Work.",
       buttonText: "Contact Me Via upwork ",
-      bgImage: "/jk1.png",
+      bgImage: "/wso2.jpeg",
   
     }
   ], []);

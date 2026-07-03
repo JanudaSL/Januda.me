@@ -17,9 +17,11 @@ interface Project {
 export default function JanudaProjectsCards() {
   // Initialize with proper type
   const [allProjects, setAllProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // only true until fallback is ready (near-instant)
+  const [isRefreshing, setIsRefreshing] = useState(false); // true while API call is in-flight
   const [error, setError] = useState<string | null>(null);
-  
+  const [usingFallback, setUsingFallback] = useState(true);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [projectsPerPage, setProjectsPerPage] = useState(6);
@@ -33,9 +35,9 @@ export default function JanudaProjectsCards() {
       title: "Smart Greenhouse Management System",
       titleUnderline: true,
       category: "Full-Stack Web Development",
-      description: "EcoGreen360 is a Smart Greenhouse Management System that Bridges the gap between the real greenhouse and its 3D digital twin.Physical sensors in the greenhouse (temperature, humidity, soil moisture, air quality) send data to an ESP32 microcontroller, which communicates with the Ballerina Backend. The backend processes this data and powers two main features.",
+      description: "EcoGreen360 is a Smart Greenhouse Management System that Bridges the gap between the real greenhouse and its 3D digital twin. Physical sensors in the greenhouse (temperature, humidity, soil moisture, air quality) send data to an ESP32 microcontroller, which communicates with the Ballerina Backend. The backend processes this data and powers two main features.",
       badge: "Full-Stack",
-      technologies: ["React.js", "Ballerina", "PostgreSQL", "MySql", "AWS S3", "Amzon DynoDB","MongoDB"],
+      technologies: ["React.js", "Ballerina", "PostgreSQL", "MySql", "AWS S3", "Amzon DynoDB", "MongoDB"],
       link: "https://axionixlab.vercel.app/"
     },
     {
@@ -44,7 +46,7 @@ export default function JanudaProjectsCards() {
       category: "AI/ML",
       description: "A machine learning and NLP-based project that classifies text into positive, negative, or neutral sentiments. It includes data preprocessing, model building (Logistic Regression, Naive Bayes, Decision Tree, Random Forest, SVM), evaluation using accuracy and F1 score, and deployment as a web application on Azure.",
       badge: "AI/ML",
-      technologies: ["Python", "NLP libraries: NLTK / SpaCy", "Scikit-learn", "Logistic Regression, Naive Bayes, Decision Tree, Random Forest, SVM","Azure"],
+      technologies: ["Python", "NLP libraries: NLTK / SpaCy", "Scikit-learn", "Logistic Regression, Naive Bayes, Decision Tree, Random Forest, SVM", "Azure"],
       link: "https://github.com/kjanuda/analylist"
     },
     {
@@ -78,16 +80,16 @@ export default function JanudaProjectsCards() {
       title: "Waste-Management-System",
       titleUnderline: true,
       category: "Full-Stack Web Development",
-      description: "EcoSort360 is an AI-powered waste management platform built with Next.js 14. It encourages users to report and manage waste through a reward-based system, turning eco-friendly actions into community-driven impact.The platform integrates Google's Gemini AI for waste verification, Web3Auth for secure login, and Drizzle ORM with Neon Database for efficient data handling. Users can earn rewards, track waste collection tasks in real time, and engage with an interactive leaderboard, making sustainability both impactful and engaging.In short: EcoSort360 is a full-stack, AI-driven, gamified waste management system that combines Next.js, AI, Web3Auth, and databases to promote greener communities.",
+      description: "EcoSort360 is an AI-powered waste management platform built with Next.js 14. It encourages users to report and manage waste through a reward-based system, turning eco-friendly actions into community-driven impact. The platform integrates Google's Gemini AI for waste verification, Web3Auth for secure login, and Drizzle ORM with Neon Database for efficient data handling. Users can earn rewards, track waste collection tasks in real time, and engage with an interactive leaderboard, making sustainability both impactful and engaging.",
       badge: "Full-Stack",
-      technologies: ["Next.js", "Typescript", "TailwindCSS", "Gemini AI","Web3Auth","Neon"],
+      technologies: ["Next.js", "Typescript", "TailwindCSS", "Gemini AI", "Web3Auth", "Neon"],
       link: "https://github.com/kjanuda/waste-management-system.git"
     },
     {
       title: "MERN Stack Job Portal Web App",
       titleUnderline: true,
       category: "Full-Stack Web Development",
-      description: "Job4U.com is a modern MERN stack job portal designed to streamline the job search and hiring process for both job seekers and employers. The platform features advanced job search filters, a responsive design, and a secure authentication system with email/password and Google sign-in. Employers can manage job postings through a dedicated dashboard, while job seekers can easily browse, filter, and apply for jobs.With MongoDB for scalable data storage and Firebase for authentication, Job4U.com provides a fast, reliable, and user-friendly platform to connect talent with opportunities.",
+      description: "Job4U.com is a modern MERN stack job portal designed to streamline the job search and hiring process for both job seekers and employers. The platform features advanced job search filters, a responsive design, and a secure authentication system with email/password and Google sign-in. Employers can manage job postings through a dedicated dashboard, while job seekers can easily browse, filter, and apply for jobs.",
       badge: "Full-Stack",
       technologies: ["React.js", "NodeJs", "Express.js", "MongoDB"],
       link: "https://www.linkedin.com/feed/update/urn:li:activity:7249848198523985920/"
@@ -147,83 +149,73 @@ export default function JanudaProjectsCards() {
   const currentProjects = allProjects.slice(startIndex, endIndex);
 
   useEffect(() => {
+    const fallbackProjects = getFallbackProjects();
+
+    // STEP 1: Show fallback data immediately — no blocking spinner for the user.
+    setAllProjects(fallbackProjects);
+    setUsingFallback(true);
+    setLoading(false);
+
+    if (!ENABLE_API_FETCH) {
+      console.log('🔧 API fetch disabled for development, using fallback data only');
+      return;
+    }
+
+    // STEP 2: Quietly try to fetch fresh data from the backend in the background.
     const fetchProjects = async () => {
-      const fallbackProjects = getFallbackProjects();
-      
-      // If API is disabled for development, use fallback immediately
-      if (!ENABLE_API_FETCH) {
-        console.log('🔧 API fetch disabled for development, using fallback data');
-        setAllProjects(fallbackProjects);
-        setLoading(false);
-        return;
-      }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 15s timeout
 
       try {
-        setLoading(true);
+        setIsRefreshing(true);
         setError(null);
-        
-        // Add timeout to prevent hanging
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 50000); // 10 second timeout
-        
-        try {
-          console.log('🌐 Attempting to fetch from API...');
-          
-          // First, try to fetch from API with better error handling
-          const response = await fetch('https://projectme-oe47.onrender.com/api/projects', {
-            signal: controller.signal,
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-            mode: 'cors' // Explicitly set CORS mode
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (!response.ok) {
-            throw new Error(`API responded with status: ${response.status}`);
-          }
-          
-          const apiData: Project[] = await response.json();
-          
-          // Check if API data exists and is valid
-          if (apiData && Array.isArray(apiData) && apiData.length > 0) {
-            // Use API data first, then append fallback
-            console.log('✅ API data loaded successfully:', apiData.length, 'projects');
-            setAllProjects([...apiData, ...fallbackProjects]);
+
+        console.log('🌐 Attempting to fetch from API...');
+        const response = await fetch('https://projectme-oe47.onrender.com/api/projects', {
+          signal: controller.signal,
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          mode: 'cors',
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`API responded with status: ${response.status}`);
+        }
+
+        const apiData: Project[] = await response.json();
+
+        if (apiData && Array.isArray(apiData) && apiData.length > 0) {
+          console.log('✅ API data loaded successfully:', apiData.length, 'projects');
+          // Priority: DB/API data first, fallback (static) projects appended after.
+          setAllProjects([...apiData, ...fallbackProjects]);
+          setUsingFallback(false);
+        } else {
+          console.log('⚠️ API returned empty or invalid data, keeping fallback');
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+
+        let errorMessage = 'Unknown error occurred';
+        if (fetchError instanceof Error) {
+          if (fetchError.name === 'AbortError') {
+            errorMessage = 'API request timed out';
+          } else if (fetchError.message.includes('Failed to fetch')) {
+            errorMessage = 'Network error - unable to reach API (CORS or connectivity issue)';
           } else {
-            console.log('⚠️ API returned empty or invalid data, using fallback');
-            setAllProjects(fallbackProjects);
-          }
-          
-        } catch (fetchError) {
-          clearTimeout(timeoutId);
-          
-          // Handle specific error types
-          if (fetchError instanceof Error) {
-            if (fetchError.name === 'AbortError') {
-              throw new Error('API request timed out after 10 seconds');
-            } else if (fetchError.message.includes('Failed to fetch')) {
-              throw new Error('Network error - unable to reach API (CORS or connectivity issue)');
-            } else {
-              throw fetchError;
-            }
-          } else {
-            throw new Error('Unknown error occurred');
+            errorMessage = fetchError.message;
           }
         }
-        
-      } catch (error) {
-        console.error('❌ Error fetching projects:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+        console.error('❌ Error fetching projects:', errorMessage);
         setError(errorMessage);
-        console.log('📦 Using fallback data instead');
-        // Use fallback data on error
-        setAllProjects(fallbackProjects);
+        // Fallback data is already showing — nothing more to do.
       } finally {
-        setLoading(false);
+        setIsRefreshing(false);
       }
     };
 
@@ -247,7 +239,7 @@ export default function JanudaProjectsCards() {
   const generatePageNumbers = (): (number | string)[] => {
     const pages: (number | string)[] = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -261,10 +253,11 @@ export default function JanudaProjectsCards() {
         pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
       }
     }
-    
+
     return pages;
   };
 
+  // Only shown for a split second while fallback data is being set — effectively never blocks.
   if (loading) {
     return (
       <section className="bg-white py-16 px-4 sm:px-6 lg:px-8">
@@ -283,17 +276,25 @@ export default function JanudaProjectsCards() {
   return (
     <section className="bg-white py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {error && (
+
+        {/* Subtle background refresh indicator — does not block content */}
+        {isRefreshing && (
+          <div className="mb-4 flex items-center gap-2 text-sm text-blue-600">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            <span>Syncing latest projects...</span>
+          </div>
+        )}
+
+        {/* Only surface an error banner if we're still stuck on fallback data */}
+        {error && usingFallback && (
           <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-start gap-3">
               <div className="text-yellow-600">⚠️</div>
               <div>
                 <p className="text-yellow-800 font-medium mb-1">API Connection Issue</p>
-                <p className="text-yellow-700 text-sm">
-                  {error}
-                </p>
+                <p className="text-yellow-700 text-sm">{error}</p>
                 <p className="text-yellow-600 text-xs mt-2">
-                  Displaying fallback projects. The API might be temporarily unavailable or experiencing CORS issues.
+                  Displaying saved projects. The live API might be temporarily unavailable.
                 </p>
               </div>
             </div>
@@ -319,16 +320,16 @@ export default function JanudaProjectsCards() {
               <option value={24}>24</option>
             </select>
           </div>
-          
+
           <div className="text-sm text-gray-700">
             {startIndex + 1} – {Math.min(endIndex, totalProjects)} of {totalProjects} projects
           </div>
         </div>
-        
+
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
           {currentProjects.map((project, index) => (
-            <div 
+            <div
               key={`${currentPage}-${index}`}
               className="group bg-white border border-gray-200 hover:border-gray-300 rounded-none p-8 hover:shadow-lg transition-all duration-300 ease-in-out min-h-[500px] flex flex-col"
             >
@@ -340,9 +341,11 @@ export default function JanudaProjectsCards() {
               </div>
 
               {/* Title */}
-              <h3 className={`text-2xl lg:text-3xl font-normal text-gray-900 mb-6 leading-tight ${
-                project.titleUnderline ? 'border-b-2 border-blue-600 pb-2' : ''
-              }`}>
+              <h3
+                className={`text-2xl lg:text-3xl font-normal text-gray-900 mb-6 leading-tight ${
+                  project.titleUnderline ? 'border-b-2 border-blue-600 pb-2' : ''
+                }`}
+              >
                 {project.title}
               </h3>
 
@@ -354,14 +357,15 @@ export default function JanudaProjectsCards() {
               {/* Technologies */}
               <div className="mb-6">
                 <div className="flex flex-wrap gap-2">
-                  {project.technologies && project.technologies.map((tech, techIndex) => (
-                    <span 
-                      key={techIndex}
-                      className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-xs font-medium"
-                    >
-                      {tech}
-                    </span>
-                  ))}
+                  {project.technologies &&
+                    project.technologies.map((tech, techIndex) => (
+                      <span
+                        key={techIndex}
+                        className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-xs font-medium"
+                      >
+                        {tech}
+                      </span>
+                    ))}
                 </div>
               </div>
 
@@ -374,7 +378,7 @@ export default function JanudaProjectsCards() {
 
               {/* Arrow Link */}
               <div className="mt-auto">
-                <a 
+                <a
                   href={project.link}
                   className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors duration-200"
                   aria-label={`Learn more about ${project.title}`}
@@ -390,12 +394,12 @@ export default function JanudaProjectsCards() {
 
         {/* Pagination Navigation */}
         {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-12">
+          <div className="flex flex-row flex-wrap justify-between items-center gap-4 mt-12">
             {/* Previous Button */}
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap ${
                 currentPage === 1
                   ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
@@ -406,7 +410,7 @@ export default function JanudaProjectsCards() {
             </button>
 
             {/* Page Numbers */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-row flex-wrap items-center justify-center gap-2 order-last sm:order-none w-full sm:w-auto">
               {generatePageNumbers().map((page, index) => (
                 <React.Fragment key={index}>
                   {page === '...' ? (
@@ -431,7 +435,7 @@ export default function JanudaProjectsCards() {
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap ${
                 currentPage === totalPages
                   ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
@@ -451,18 +455,18 @@ export default function JanudaProjectsCards() {
           <p className="text-gray-700 text-lg max-w-3xl mx-auto mb-12">
             From full-stack web applications to IoT systems and cloud infrastructure, explore innovative solutions built with modern technologies and best practices.
           </p>
-          
+
           {/* Category Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12 max-w-4xl mx-auto">
             {[
               "Full-Stack Web Development",
-              "Frontend Development / UI Design", 
+              "Frontend Development / UI Design",
               "Mobile Applications",
               "IoT & Embedded Systems",
               "Cloud & Backend Systems",
               "Automation & Tools"
             ].map((category, index) => (
-              <div 
+              <div
                 key={index}
                 className="bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 p-4 rounded-lg transition-all duration-200 group cursor-pointer"
               >

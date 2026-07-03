@@ -7,6 +7,7 @@ import Exp from './components/Exp';
 import Recomnd from './components/Recomnd';
 import Hire from './components/Hire';
 import Other from './components/Other';
+import Ved from './components/ved';
 
 
 export default function HomePage() {
@@ -16,6 +17,7 @@ export default function HomePage() {
       <Intro />
       <About />
       <Skill />
+      <Ved />
       <Offer />
     
       <Recomnd />

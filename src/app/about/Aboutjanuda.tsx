@@ -1,38 +1,35 @@
-import React from 'react';
+import { Poppins } from "next/font/google";
 
-const Aboutjanuda = () => {
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  variable: "--font-poppins",
+});
+
+export default function AboutVideo() {
   return (
-    <section className="bg-gray-900 py-20 px-6 lg:px-12 relative overflow-hidden">
-      {/* Background Image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/Think.png')",
-          filter: "brightness(0.3) contrast(1.2)",
-        }}
-      ></div>
-
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/50"></div>
-
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-5xl lg:text-6xl font-bold text-white mb-6">
-            My <span className="text-cyan-400">Approach</span>
-          </h2>
-          <p className="text-gray-200 text-xl lg:text-2xl max-w-3xl mx-auto">
-            Driven by innovation, excellence, and an agile culture that transforms ideas into reality
+    <section
+      className={`${poppins.variable} font-[family-name:var(--font-poppins)] w-full bg-white px-6 py-20`}
+    >
+      <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 md:grid-cols-2">
+        <div>
+          <p className="text-2xl font-light leading-relaxed text-black sm:text-3xl">
+            Building modern software solutions with a focus on clean
+            architecture, performance, and real-world impact.
           </p>
         </div>
 
-        {/* Cards Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Add your cards here if needed */}
+        <div className="w-full overflow-hidden rounded-xl">
+          <video
+            src="/ai.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="h-full w-full object-cover"
+          />
         </div>
       </div>
     </section>
   );
-};
-
-export default Aboutjanuda;
+}

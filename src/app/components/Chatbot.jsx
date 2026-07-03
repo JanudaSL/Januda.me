@@ -111,9 +111,11 @@ export default function Chatbot() {
         body: JSON.stringify({ question: userMsg.content }),
       });
 
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = data?.error || `HTTP error! status: ${res.status}`;
+        throw new Error(message);
+      }
 
       if (data.error) {
         setMessages((m) => [...m, { 

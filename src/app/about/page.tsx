@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Aboutme from "./Aboutme";
 import Aboutme1 from "./Aboutme1";
 import Aboutjanuda from "./Aboutjanuda";
+import Abt from "./Abt";
 
 // ✅ SEO Metadata
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function AboutMePage() {
       <Aboutme />
       <Aboutme1 />
       <Aboutjanuda />
+      <Abt />
     </section>
   );
 }

@@ -1,102 +1,189 @@
 'use client';
 
 import Image from 'next/image';
+import { Jost, IBM_Plex_Mono } from 'next/font/google';
+
+const display = Jost({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  display: 'swap',
+});
+
+const mono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+});
+
+const SPEC_ROWS = [
+  { key: 'STACK', value: 'Full-stack · Cloud · IoT' },
+  { key: 'BUILDS', value: 'Web / Mobile / Embedded' },
+  { key: 'DOMAINS', value: 'Education · Safety · Automation' },
+  { key: 'STATUS', value: 'Open to work', live: true },
+];
 
 export default function AboutJanuda() {
   return (
-    <section className="relative bg-gradient-to-br from-slate-50 via-white to-blue-50 py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      {/* Enhanced Background decoration */}
-      <div className="absolute top-0 right-0 w-72 h-72 sm:w-96 sm:h-96 lg:w-[32rem] lg:h-[32rem] bg-gradient-to-br from-blue-200 to-purple-200 rounded-full blur-3xl opacity-20 -z-10 animate-pulse"></div>
-      <div className="absolute bottom-0 left-0 w-56 h-56 sm:w-80 sm:h-80 lg:w-96 lg:h-96 bg-gradient-to-tr from-purple-200 to-pink-200 rounded-full blur-3xl opacity-20 -z-10 animate-pulse" style={{animationDelay: '1s'}}></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-80 sm:h-80 bg-blue-100 rounded-full blur-3xl opacity-10 -z-10"></div>
-      
+    <section className="relative bg-[#FAFAF6] py-16 sm:py-20 md:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+
+      {/* Blueprint grid background */}
+      <div className="absolute inset-0 -z-10">
+        <div
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage:
+              'linear-gradient(#14213D 1px, transparent 1px), linear-gradient(90deg, #14213D 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+        {/* faint cross-hair marks at grid intersections, top-left quadrant only */}
+        <div
+          className="absolute inset-0 opacity-[0.06] hidden lg:block"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle, #2A5C8A 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+      </div>
+
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-16 xl:gap-20 items-center">
-          
-          {/* Image Section - Enhanced */}
+
+        {/* Section label — code-comment styled eyebrow */}
+        <div className="flex items-center gap-3 mb-10 sm:mb-14">
+          <span className={`${mono.className} text-[11px] sm:text-xs tracking-wider text-[#2A5C8A]`}>
+            {'/* 01 — who i am */'}
+          </span>
+          <div className="flex-1 h-px bg-[#14213D]/10" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 lg:gap-20 xl:gap-28 items-start">
+
+          {/* ── IMAGE / SCHEMATIC FRAME ── */}
           <div className="relative w-full order-1 lg:order-1">
-            <div className="relative mx-auto max-w-sm sm:max-w-md lg:max-w-none">
-              {/* Decorative elements with improved sizing */}
-              <div className="absolute -top-3 -left-3 sm:-top-4 sm:-left-4 lg:-top-6 lg:-left-6 w-32 h-32 sm:w-48 sm:h-48 md:w-60 md:h-60 lg:w-80 lg:h-80 bg-gradient-to-br from-blue-400 to-blue-200 rounded-3xl -z-10 opacity-60 transform rotate-6 blur-sm"></div>
-              <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 lg:-bottom-6 lg:-right-6 w-28 h-28 sm:w-40 sm:h-40 md:w-52 md:h-52 lg:w-72 lg:h-72 bg-gradient-to-tl from-purple-400 to-blue-200 rounded-3xl -z-10 opacity-60 transform -rotate-6 blur-sm"></div>
-              
-              {/* Main image container with improved aspect ratios */}
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl ring-1 ring-gray-200/50 aspect-[3/4] sm:aspect-[4/5] lg:aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-50 group">
+            <div className="relative mx-auto max-w-xs sm:max-w-sm md:max-w-md lg:max-w-none">
+
+              {/* Corner brackets — viewfinder / schematic framing instead of a full border box */}
+              <span className="absolute -top-3 -left-3 w-8 h-8 border-t-2 border-l-2 border-[#14213D] rounded-tl-md z-20" />
+              <span className="absolute -top-3 -right-3 w-8 h-8 border-t-2 border-r-2 border-[#14213D] rounded-tr-md z-20" />
+              <span className="absolute -bottom-3 -left-3 w-8 h-8 border-b-2 border-l-2 border-[#14213D] rounded-bl-md z-20" />
+              <span className="absolute -bottom-3 -right-3 w-8 h-8 border-b-2 border-r-2 border-[#14213D] rounded-br-md z-20" />
+
+              {/* Main image */}
+              <div className="relative rounded-xl overflow-hidden ring-1 ring-[#14213D]/10 aspect-[3/4] sm:aspect-[4/5] lg:aspect-[3/4] bg-[#EFEEE8] group z-10">
                 <Image
                   src="/bal1.jpg"
-                  alt="Januda - Software Engineer"
+                  alt="Januda – Software Engineer"
                   fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                  className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-out"
                   priority
                   sizes="(max-width: 640px) 90vw, (max-width: 1024px) 50vw, 45vw"
                 />
-                {/* Overlay gradient on hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#14213D]/35 via-transparent to-transparent" />
+
+                {/* fine tick marks along the bottom edge, like a ruler / schematic scale */}
+                <div className="absolute bottom-0 left-0 right-0 h-3 flex items-end opacity-70">
+                  {Array.from({ length: 24 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className="flex-1 bg-white/70"
+                      style={{ height: i % 4 === 0 ? '10px' : '5px', width: '1px' }}
+                    />
+                  ))}
+                </div>
+
+                <div className="absolute bottom-5 left-4 sm:bottom-6 sm:left-5">
+                  <span className={`${mono.className} inline-block bg-white/95 text-[#14213D] text-[10px] sm:text-xs font-medium tracking-widest uppercase px-3 py-1.5 rounded-sm shadow-sm`}>
+                    role:// software engineer
+                  </span>
+                </div>
               </div>
-              
-              {/* Floating badge - improved positioning */}
-              
+
+              {/* Spec chip — anchored to the image's own corner, never bleeds into the next column */}
+              <div className="absolute -bottom-5 -right-4 sm:-bottom-6 sm:-right-6 z-20 bg-[#14213D] text-white rounded-lg px-4 py-3 sm:px-5 sm:py-4 shadow-lg">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="relative flex h-2 w-2">
+                    <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFB000] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FFB000]" />
+                  </span>
+                  <p className={`${mono.className} text-[10px] tracking-widest uppercase text-[#9FB3D6]`}>status</p>
+                </div>
+                <p className={`${mono.className} text-xs sm:text-sm font-medium whitespace-nowrap`}>open_to_work</p>
+              </div>
             </div>
           </div>
 
-          {/* Content Section - Enhanced */}
-          <div className="space-y-5 sm:space-y-6 lg:space-y-8 order-2 lg:order-2">
-            
-            {/* Header with improved spacing */}
-            <div className="space-y-3 sm:space-y-4">
-              <div className="inline-flex items-center gap-2">
-                
-              </div>
-              
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-[1.1] tracking-tight">
-                About{' '}
-                <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent animate-gradient">
-                  Januda
-                </span>
+          {/* ── CONTENT SECTION ── */}
+          <div className="space-y-8 sm:space-y-10 order-2 lg:order-2 lg:pt-2">
+
+            {/* Heading */}
+            <div className="space-y-1">
+              <p className={`${mono.className} text-xs sm:text-sm tracking-[0.2em] text-[#2A5C8A] uppercase`}>
+                About
+              </p>
+              <h2
+                className={`${display.className} text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-light text-[#14213D] leading-[1.05] tracking-tight`}
+              >
+                Januda
+                <span className="motion-safe:animate-pulse text-[#FFB000]">_</span>
               </h2>
-              
-              <div className="flex items-center gap-2">
-                <div className="w-20 sm:w-24 md:w-28 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+            </div>
+
+            {/* Description paragraphs */}
+            <div className={`${display.className} space-y-5 sm:space-y-6 max-w-xl`}>
+              <p className="text-base sm:text-lg font-light text-[#3D3D3A] leading-relaxed">
+                A{' '}
+                <span className="font-normal text-[#14213D]">
+                  passionate and aspiring software engineer
+                </span>{' '}
+                dedicated to building innovative and impactful digital solutions. With a strong foundation in full-stack development, cloud technologies, and IoT systems, he creates applications that blend functionality with user-friendly design.
+              </p>
+
+              <p className="text-base sm:text-lg font-light text-[#3D3D3A] leading-relaxed">
+                His portfolio spans{' '}
+                <span className="font-normal text-[#14213D]">
+                  web applications, mobile apps, and IoT integrations
+                </span>{' '}
+                that address real-world challenges across education, safety, and automation.
+              </p>
+
+              <p className="text-base sm:text-lg font-light text-[#3D3D3A] leading-relaxed">
+                Alongside his technical expertise, Januda brings commitment, adaptability, and a drive for continuous learning — prepared to contribute meaningfully to modern software teams.
+              </p>
+            </div>
+
+            {/* Spec sheet — a datasheet-style table instead of generic pill tags */}
+            <div className="max-w-xl border border-[#14213D]/15 rounded-lg overflow-hidden bg-white/60">
+              <div className={`${mono.className} flex items-center justify-between px-4 py-2 bg-[#14213D]/[0.04] border-b border-[#14213D]/10 text-[10px] tracking-widest uppercase text-[#14213D]/60`}>
+                <span>engineer_spec.json</span>
+                <span>rev. 2026</span>
               </div>
+              <dl>
+                {SPEC_ROWS.map((row, i) => (
+                  <div
+                    key={row.key}
+                    className={`flex items-center justify-between px-4 py-3 ${i !== SPEC_ROWS.length - 1 ? 'border-b border-[#14213D]/[0.07]' : ''}`}
+                  >
+                    <dt className={`${mono.className} text-[11px] sm:text-xs tracking-widest text-[#2A5C8A]`}>
+                      {row.key}
+                    </dt>
+                    <dd className="flex items-center gap-2 text-sm text-[#14213D] font-medium text-right">
+                      {row.live && (
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFB000] opacity-75" />
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#FFB000]" />
+                        </span>
+                      )}
+                      {row.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
 
-            {/* Description with better typography */}
-            <div className="space-y-4 sm:space-y-5">
-              <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed">
-                Januda is a <span className="font-bold text-gray-900 bg-yellow-50 px-2 py-0.5 rounded">passionate and aspiring software engineer</span> dedicated to building innovative and impactful digital solutions. With a strong foundation in full-stack development, cloud technologies, and IoT systems, he focuses on creating applications that blend functionality with user-friendly design.
-              </p>
-              
-              <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed">
-                His portfolio spans <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">web applications, mobile apps, and IoT integrations</span> that address real-world challenges across education, safety, and automation.
-              </p>
-              
-              <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed">
-                Alongside his technical expertise, Januda brings commitment, adaptability, and a drive for continuous learning. Having completed industry-recognized certifications and practical projects, he is prepared to contribute meaningfully to modern software teams.
-              </p>
-            </div>
-
-            {/* Stats Grid - NEW */}
-            
-
-            {/* CTA Button - NEW */}
-            <div className="pt-2 sm:pt-4">
-              
-            </div>
           </div>
         </div>
       </div>
-      
-      <style jsx>{`
-        @keyframes gradient {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        .animate-gradient {
-          background-size: 200% auto;
-          animation: gradient 3s ease infinite;
-        }
-      `}</style>
     </section>
   );
 }

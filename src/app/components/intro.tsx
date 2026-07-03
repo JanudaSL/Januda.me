@@ -7,17 +7,17 @@ export default function ProfileHeroSection() {
     {
       name: "Instagram",
       icon: <Instagram className="w-5 h-5 text-pink-600" />,
-      url: "https://www.instagram.com/",
+      url: "https://www.instagram.com/januda_j_kodithuwakku_/",
     },
     {
       name: "Facebook",
       icon: <Facebook className="w-5 h-5 text-blue-600" />,
-      url: "https://www.facebook.com/",
+      url: "https://web.facebook.com/Januda.J.Kodithuwakku/",
     },
     {
       name: "LinkedIn",
       icon: <Linkedin className="w-5 h-5 text-blue-700" />,
-      url: "https://www.linkedin.com/",
+      url: "https://www.linkedin.com/in/januda-kodithuwakku/",
     },
   ];
 
@@ -76,7 +76,7 @@ export default function ProfileHeroSection() {
             transition={{ type: "spring", stiffness: 200 }}
           >
             <div className="text-center">
-              <div className="text-5xl font-bold mb-2">1</div>
+              <div className="text-5xl font-bold mb-2">2+</div>
               <div className="text-sm font-medium uppercase tracking-wide">
                 YEARS OF<br />EXPERIENCE
               </div>

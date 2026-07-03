@@ -12,10 +12,13 @@ import {
   X,
   Menu,
   BookOpen,
+  Loader2,
 } from "lucide-react";
 
 export default function Home() {
   const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true); // true until first load attempt finishes
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedAuthor, setSelectedAuthor] = useState<string>("janudakodi");
   const [authors, setAuthors] = useState<string[]>([]);
   const [authorProfiles, setAuthorProfiles] = useState<Record<string, string>>({});
@@ -30,23 +33,32 @@ export default function Home() {
   }, []);
 
   const loadPosts = () => {
-    api.get("/posts").then((res) => {
-      setPosts(res.data);
-      const uniqueAuthors = [
-        ...new Set(res.data.map((post: any) => post.author)),
-      ] as string[];
-      setAuthors(uniqueAuthors);
-      const profiles: Record<string, string> = {};
-      res.data.forEach((post: any) => {
-        if (post.author && post.profileImage && !profiles[post.author]) {
-          profiles[post.author] = post.profileImage;
+    setLoadError(null);
+    api
+      .get("/posts")
+      .then((res) => {
+        setPosts(res.data);
+        const uniqueAuthors = [
+          ...new Set(res.data.map((post: any) => post.author)),
+        ] as string[];
+        setAuthors(uniqueAuthors);
+        const profiles: Record<string, string> = {};
+        res.data.forEach((post: any) => {
+          if (post.author && post.profileImage && !profiles[post.author]) {
+            profiles[post.author] = post.profileImage;
+          }
+        });
+        setAuthorProfiles(profiles);
+        if (!uniqueAuthors.includes("janudakodi") && uniqueAuthors.length > 0) {
+          setSelectedAuthor(uniqueAuthors[0]);
         }
+      })
+      .catch(() => {
+        setLoadError("Unable to load publications right now. Please try again.");
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      setAuthorProfiles(profiles);
-      if (!uniqueAuthors.includes("janudakodi") && uniqueAuthors.length > 0) {
-        setSelectedAuthor(uniqueAuthors[0]);
-      }
-    });
   };
 
   const filteredPosts = posts.filter((post) => post.author === selectedAuthor);
@@ -253,7 +265,43 @@ export default function Home() {
 
       {/* ── Main Content ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {filteredPosts.length === 0 ? (
+        {loading ? (
+          /* Loading skeleton — shown only during the very first fetch, avoids the
+             "No publications found" flash while the backend responds. */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white border border-gray-200 rounded-2xl overflow-hidden animate-pulse"
+              >
+                <div className="h-48 bg-gray-100" />
+                <div className="p-5 space-y-3">
+                  <div className="h-3 w-24 bg-gray-100 rounded" />
+                  <div className="h-4 w-full bg-gray-100 rounded" />
+                  <div className="h-4 w-3/4 bg-gray-100 rounded" />
+                  <div className="h-3 w-full bg-gray-100 rounded" />
+                  <div className="h-3 w-2/3 bg-gray-100 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : loadError ? (
+          /* Error state — only reached if the API call actually failed */
+          <div className="text-center py-24">
+            <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 text-base mb-4">{loadError}</p>
+            <button
+              onClick={() => {
+                setLoading(true);
+                loadPosts();
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+            >
+              <Loader2 className="w-4 h-4" />
+              Try Again
+            </button>
+          </div>
+        ) : filteredPosts.length === 0 ? (
           <div className="text-center py-24">
             <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 text-base">

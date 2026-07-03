@@ -132,7 +132,7 @@ export async function POST(request) {
 
     // Get the generative model
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.5-flash',
       generationConfig: {
         temperature: 0.7,
         topP: 0.8,
@@ -142,7 +142,7 @@ export async function POST(request) {
     });
 
     // Enhanced prompt for better contextual understanding
-    const systemPrompt = `${JANUDA_CONTEXT}
+    const prompt = `${JANUDA_CONTEXT}
 
 User Question: "${trimmedQuestion}"
 
@@ -156,10 +156,8 @@ Instructions:
 
 Please provide a helpful and professional response:`;
 
-    // Generate response
-    const result = await model.generateContent(systemPrompt);
-    const response = await result.response;
-    const answer = response.text() || 'Sorry, I could not generate a response. Please try again.';
+    const result = await model.generateContent(prompt);
+    const answer = result.response?.text?.() || 'Sorry, I could not generate a response. Please try again.';
 
     return NextResponse.json({ 
       answer: answer.trim(),

@@ -62,7 +62,8 @@ const IBMInsightsBlog = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true); // only true until static data is set (near-instant)
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false); // true while background API fetch is in-flight
   const [error, setError] = useState<string | null>(null);
   const [dataSource, setDataSource] = useState<DataSource>('both');
   const [apiStatus, setApiStatus] = useState<ApiStatus>('checking');
@@ -178,21 +179,21 @@ const IBMInsightsBlog = () => {
   // Check API availability by testing multiple endpoints
   const checkApiAvailability = useCallback(async (): Promise<string | null> => {
     console.log('Testing API endpoints...');
-    
+
     for (const endpoint of possibleEndpoints) {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
+
         const response = await fetch(`https://blogme-1-mh0u.onrender.com${endpoint}`, {
           method: 'HEAD',
           signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         console.log(`Endpoint ${endpoint}: ${response.status}`);
-        
+
         if (response.ok) {
           console.log(`✅ Found working endpoint: ${endpoint}`);
           setApiStatus('available');
@@ -203,174 +204,161 @@ const IBMInsightsBlog = () => {
         console.log(`❌ Endpoint ${endpoint} failed: ${errorMessage}`);
       }
     }
-    
+
     console.warn('No working API endpoints found');
     setApiStatus('unavailable');
     return null;
   }, [possibleEndpoints]);
 
-  // Fetch blog posts from API
+  // STEP 1: Show static/JSON posts immediately — no blocking spinner for the user.
   useEffect(() => {
-    const fetchBlogPosts = async () => {
-      setLoading(true);
-      setError(null);
-      
-      let finalPosts: BlogPost[] = [];
-      let dbPosts: BlogPost[] = [];
-      
-      // Always include hardcoded posts if dataSource allows
-      if (dataSource === 'hardcoded' || dataSource === 'both') {
-        finalPosts = [...staticBlogPosts];
-      }
-      
-      // Try to fetch from database if dataSource allows
-      if (dataSource === 'database' || dataSource === 'both') {
-        // First check if API is available and get the working endpoint
-        const workingEndpoint = await checkApiAvailability();
-        
-        if (workingEndpoint) {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-            
-            // Try GET request to the working endpoint
-            const response = await fetch(`https://blogme-1-mh0u.onrender.com${workingEndpoint}`, {
-              method: 'GET',
-              signal: controller.signal,
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-              }
-            });
-            
-            clearTimeout(timeoutId);
-            
-            if (!response.ok) {
-              throw new Error(`API returned ${response.status}: ${response.statusText}`);
-            }
-            
-            const contentType = response.headers.get('content-type');
-            let data;
-            
-            if (contentType && contentType.includes('application/json')) {
-              data = await response.json();
-            } else {
-              // If it's not JSON, try to parse as text and see what we get
-              const textData = await response.text();
-              console.log('Non-JSON response:', textData);
-              
-              // Try to parse as JSON anyway in case content-type is wrong
-              try {
-                data = JSON.parse(textData);
-              } catch {
-                throw new Error(`Expected JSON response but got: ${contentType || 'unknown content type'}`);
-              }
-            }
-            
-            console.log('API Response:', data);
-            
-            // Handle different response formats
-            let postsArray: ApiPostData[] = [];
-            if (Array.isArray(data)) {
-              postsArray = data as ApiPostData[];
-            } else if (data && Array.isArray((data as ApiResponse).posts)) {
-              postsArray = (data as ApiResponse).posts!;
-            } else if (data && Array.isArray((data as ApiResponse).data)) {
-              postsArray = (data as ApiResponse).data!;
-            } else if (data && typeof data === 'object') {
-              // If it's a single post object, wrap it in an array
-              postsArray = [data as ApiPostData];
-            } else {
-              throw new Error('Invalid data format received from API');
-            }
-            
-            // Transform API data to match our component structure - ensuring all required fields
-            const transformedPosts: BlogPost[] = postsArray.map((post: ApiPostData, postIndex: number) => ({
-              // Ensure required fields exist with fallback values
-              id: post.id || `db_${Date.now()}_${postIndex}`,
-              title: post.title || 'Untitled Post',
-              writeDate: post.writeDate || post.created_at || new Date().toISOString().split('T')[0],
-              category: post.category || 'general',
-              description: post.description || 'No description available.',
-              readTime: post.readTime || `${Math.ceil(Math.random() * 10 + 3)} min read`,
-              imageUrl: post.imageUrl || `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=400&h=250&fit=crop`,
-              moreInfoLink: post.moreInfoLink || '#',
-              tags: post.tags || [],
-              featured: post.featured || false,
-              // Optional fields
-              author: post.author,
-              authorTitle: post.authorTitle,
-              created_at: post.created_at,
-              source: 'database' as const // Add source identifier
-            }));
+    if (dataSource === 'hardcoded' || dataSource === 'both') {
+      setBlogPosts(staticBlogPosts.map(post => ({ ...post, source: 'hardcoded' as const })));
+    } else {
+      setBlogPosts([]);
+    }
+    setLoading(false);
+  }, [dataSource, staticBlogPosts]);
 
-            dbPosts = transformedPosts;
-            
-            // Sort database posts by date (newest first)
-            dbPosts.sort((a: BlogPost, b: BlogPost) => new Date(b.writeDate).getTime() - new Date(a.writeDate).getTime());
-            
-          } catch (err) {
-            console.error('Error fetching blog posts:', err);
-            let errorMessage = 'Failed to load data from database';
-            
-            if (err instanceof Error) {
-              if (err.name === 'AbortError') {
-                errorMessage = 'Request timed out - API server may be slow or unavailable';
-              } else if (err.message.includes('404')) {
-                errorMessage = 'API endpoint not found (404) - service may be unavailable';
-              } else if (err.message.includes('500')) {
-                errorMessage = 'Server error (500) - database may be temporarily unavailable';
-              } else if (err.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error - unable to connect to API server';
-              } else {
-                errorMessage = err.message;
-              }
-            }
-            
-            setError(errorMessage);
-            setApiStatus('unavailable');
-            
-            // If we're in database-only mode and there's an error, show empty state
-            if (dataSource === 'database') {
-              finalPosts = [];
-            }
+  // STEP 2: Quietly fetch DB posts in the background and merge them in — never remove the static posts.
+  useEffect(() => {
+    const fetchDbPosts = async () => {
+      if (dataSource === 'hardcoded') {
+        return; // user explicitly wants hardcoded only, skip API call
+      }
+
+      setIsRefreshing(true);
+      setError(null);
+
+      const workingEndpoint = await checkApiAvailability();
+
+      if (!workingEndpoint) {
+        setError('API server is not responding - endpoint may be unavailable');
+        setIsRefreshing(false);
+        // Static posts (already shown in Step 1) stay as-is. Nothing to remove.
+        return;
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        const response = await fetch(`https://blogme-1-mh0u.onrender.com${workingEndpoint}`, {
+          method: 'GET',
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
           }
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+        let data;
+
+        if (contentType && contentType.includes('application/json')) {
+          data = await response.json();
         } else {
-          setError('API server is not responding - endpoint may be unavailable');
+          const textData = await response.text();
+          console.log('Non-JSON response:', textData);
+          try {
+            data = JSON.parse(textData);
+          } catch {
+            throw new Error(`Expected JSON response but got: ${contentType || 'unknown content type'}`);
+          }
+        }
+
+        console.log('API Response:', data);
+
+        // Handle different response formats
+        let postsArray: ApiPostData[] = [];
+        if (Array.isArray(data)) {
+          postsArray = data as ApiPostData[];
+        } else if (data && Array.isArray((data as ApiResponse).posts)) {
+          postsArray = (data as ApiResponse).posts!;
+        } else if (data && Array.isArray((data as ApiResponse).data)) {
+          postsArray = (data as ApiResponse).data!;
+        } else if (data && typeof data === 'object') {
+          postsArray = [data as ApiPostData];
+        } else {
+          throw new Error('Invalid data format received from API');
+        }
+
+        // Transform API data to match our component structure
+        const transformedPosts: BlogPost[] = postsArray.map((post: ApiPostData, postIndex: number) => ({
+          id: post.id || `db_${Date.now()}_${postIndex}`,
+          title: post.title || 'Untitled Post',
+          writeDate: post.writeDate || post.created_at || new Date().toISOString().split('T')[0],
+          category: post.category || 'general',
+          description: post.description || 'No description available.',
+          readTime: post.readTime || `${Math.ceil(Math.random() * 10 + 3)} min read`,
+          imageUrl: post.imageUrl || `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=400&h=250&fit=crop`,
+          moreInfoLink: post.moreInfoLink || '#',
+          tags: post.tags || [],
+          featured: post.featured || false,
+          author: post.author,
+          authorTitle: post.authorTitle,
+          created_at: post.created_at,
+          source: 'database' as const
+        }));
+
+        // Sort DB posts newest first
+        transformedPosts.sort((a, b) => new Date(b.writeDate).getTime() - new Date(a.writeDate).getTime());
+
+        if (transformedPosts.length === 0) {
+          // Nothing came back — keep whatever is already showing (static or previous DB merge).
+          setIsRefreshing(false);
+          return;
+        }
+
+        // STEP 3: Merge — DB data gets priority placement, static JSON data stays, nothing is deleted.
+        setBlogPosts(prev => {
           if (dataSource === 'database') {
-            finalPosts = [];
+            // Database-only mode: still never blank the screen if we already have something rendered.
+            const newest = { ...transformedPosts[0], featured: true, isLatest: true };
+            const rest = transformedPosts.slice(1);
+            return [newest, ...rest];
+          }
+
+          // 'both' mode: newest DB post first (highlighted), then static posts, then the rest of DB posts.
+          const staticPosts = staticBlogPosts.map(post => ({ ...post, source: 'hardcoded' as const }));
+          const newestDbPost = { ...transformedPosts[0], featured: true, isLatest: true };
+          const remainingDbPosts = transformedPosts.slice(1);
+          return [newestDbPost, ...staticPosts, ...remainingDbPosts];
+        });
+      } catch (err) {
+        console.error('Error fetching blog posts:', err);
+        let errorMessage = 'Failed to load data from database';
+
+        if (err instanceof Error) {
+          if (err.name === 'AbortError') {
+            errorMessage = 'Request timed out - API server may be slow or unavailable';
+          } else if (err.message.includes('404')) {
+            errorMessage = 'API endpoint not found (404) - service may be unavailable';
+          } else if (err.message.includes('500')) {
+            errorMessage = 'Server error (500) - database may be temporarily unavailable';
+          } else if (err.message.includes('Failed to fetch')) {
+            errorMessage = 'Network error - unable to connect to API server';
+          } else {
+            errorMessage = err.message;
           }
         }
+
+        setError(errorMessage);
+        setApiStatus('unavailable');
+        // Static posts already rendered in Step 1 — we simply don't merge DB data. Nothing is cleared.
+      } finally {
+        setIsRefreshing(false);
       }
-      
-      // Combine posts based on data source
-      if (dataSource === 'both') {
-        // Put newest DB post first, then hardcoded posts, then remaining DB posts
-        if (dbPosts.length > 0) {
-          const newestDbPost = { ...dbPosts[0], featured: true, isLatest: true };
-          const remainingDbPosts = dbPosts.slice(1).map(post => ({ ...post, source: 'database' as const }));
-          const hardcodedPosts = staticBlogPosts.map(post => ({ ...post, source: 'hardcoded' as const }));
-          
-          finalPosts = [newestDbPost, ...hardcodedPosts, ...remainingDbPosts];
-        } else {
-          // If no DB posts, just use hardcoded
-          finalPosts = staticBlogPosts.map(post => ({ ...post, source: 'hardcoded' as const }));
-        }
-      } else if (dataSource === 'database') {
-        if (dbPosts.length > 0) {
-          dbPosts[0].featured = true;
-          dbPosts[0].isLatest = true;
-          finalPosts = dbPosts.map(post => ({ ...post, source: 'database' as const }));
-        } else {
-          finalPosts = [];
-        }
-      }
-      
-      setBlogPosts(finalPosts);
-      setLoading(false);
     };
 
-    fetchBlogPosts();
+    fetchDbPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataSource, checkApiAvailability, staticBlogPosts]);
 
   const getCategoryColor = (category: string): string => {
@@ -408,8 +396,8 @@ const IBMInsightsBlog = () => {
     });
   };
 
-  const filteredPosts: BlogPost[] = selectedCategory === 'all' 
-    ? blogPosts 
+  const filteredPosts: BlogPost[] = selectedCategory === 'all'
+    ? blogPosts
     : blogPosts.filter(post => post.category === selectedCategory);
 
   const paginatedPosts: BlogPost[] = filteredPosts.slice(
@@ -431,16 +419,13 @@ const IBMInsightsBlog = () => {
     setTimeout(() => setDataSource(currentDataSource), 100);
   };
 
-  // Loading state
+  // Only shown for a split second while static data is being set — effectively never blocks.
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading blog posts...</p>
-          {apiStatus === 'checking' && (
-            <p className="text-sm text-gray-500 mt-2"></p>
-          )}
         </div>
       </div>
     );
@@ -449,14 +434,19 @@ const IBMInsightsBlog = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
-        
+
         {/* Header */}
         <div className="mb-12 text-center">
-         
-          
 
-          
-          {/* Error Display with Retry */}
+          {/* Subtle background refresh indicator — does not block content */}
+          {isRefreshing && (
+            <div className="inline-flex items-center gap-2 text-sm text-blue-600 mb-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Checking for latest posts from the database...</span>
+            </div>
+          )}
+
+          {/* Error Display with Retry — only surfaces, never hides existing content */}
           {error && dataSource !== 'hardcoded' && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm max-w-2xl mx-auto">
               <div className="flex items-start gap-3">
@@ -465,7 +455,7 @@ const IBMInsightsBlog = () => {
                   <div className="font-medium mb-1">Database Connection Error</div>
                   <div className="text-red-700 mb-3">{error}</div>
                   {dataSource === 'both' && (
-                    <div className="text-red-600 mb-3">Showing hardcoded content only.</div>
+                    <div className="text-red-600 mb-3">Showing static content only for now.</div>
                   )}
                   <button
                     onClick={retryApiConnection}
@@ -503,7 +493,7 @@ const IBMInsightsBlog = () => {
         {/* Blog Posts Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {paginatedPosts.map((post) => (
-            <article key={post.id} className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-100">
+            <article key={post.id} className="relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-100">
               {/* Featured/Source Badges */}
               <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
                 {post.featured && (
@@ -511,7 +501,7 @@ const IBMInsightsBlog = () => {
                     {post.isLatest ? 'LATEST' : 'FEATURED'}
                   </span>
                 )}
-                
+
                 {/* Source Badge */}
                 <span className={`text-white text-xs font-bold px-2 py-1 rounded-full ${
                   post.source === 'database' ? 'bg-green-600' : 'bg-blue-600'
@@ -531,8 +521,8 @@ const IBMInsightsBlog = () => {
 
               {/* Post Image */}
               <div className="relative overflow-hidden">
-                <img 
-                  src={post.imageUrl} 
+                <img
+                  src={post.imageUrl}
                   alt={post.title}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
@@ -596,7 +586,7 @@ const IBMInsightsBlog = () => {
 
                 {/* Read More Link */}
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <a 
+                  <a
                     href={post.moreInfoLink}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -605,7 +595,7 @@ const IBMInsightsBlog = () => {
                     <span className="mr-2">Read Full Article</span>
                     <ExternalLink className="h-4 w-4 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform duration-200" />
                   </a>
-                  
+
                   <ArrowUpRight className="h-5 w-5 text-blue-600 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-200" />
                 </div>
               </div>
@@ -621,7 +611,7 @@ const IBMInsightsBlog = () => {
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No articles found</h3>
             <p className="text-gray-600">
-              {dataSource === 'database' && error ? 
+              {dataSource === 'database' && error ?
                 'Database is currently unavailable. Try switching to "Hardcoded Only" or "Both Sources".' :
                 'Try selecting a different category or check back later for new content.'
               }
@@ -639,12 +629,12 @@ const IBMInsightsBlog = () => {
 
         {/* Pagination Controls */}
         {paginatedPosts.length > 0 && (
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex flex-row flex-wrap justify-between items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             {/* Items Per Page */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <span className="text-gray-700 text-sm font-medium">Articles per page:</span>
               <div className="relative">
-                <select 
+                <select
                   value={itemsPerPage}
                   onChange={(e) => setItemsPerPage(Number(e.target.value))}
                   className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -661,35 +651,35 @@ const IBMInsightsBlog = () => {
             </div>
 
             {/* Page Navigation */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <div className="relative">
-                <select 
+                <select
                   value={currentPage}
                   onChange={(e) => setCurrentPage(Number(e.target.value))}
                   className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  {Array.from({ length: Math.ceil(filteredPosts.length / itemsPerPage) }, (_, i) => (
+                  {Array.from({ length: Math.max(1, Math.ceil(filteredPosts.length / itemsPerPage)) }, (_, i) => (
                     <option key={i + 1} value={i + 1}>Page {i + 1}</option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               </div>
-              <span className="text-gray-600 text-sm">
-                of {Math.ceil(filteredPosts.length / itemsPerPage)} pages
+              <span className="text-gray-600 text-sm whitespace-nowrap">
+                of {Math.max(1, Math.ceil(filteredPosts.length / itemsPerPage))} pages
               </span>
 
               {/* Navigation Arrows */}
               <div className="flex items-center gap-1">
-                <button 
+                <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   <ChevronLeft className="h-4 w-4 text-gray-600" />
                 </button>
-                <button 
-                  onClick={() => setCurrentPage(Math.min(Math.ceil(filteredPosts.length / itemsPerPage), currentPage + 1))}
-                  disabled={currentPage === Math.ceil(filteredPosts.length / itemsPerPage)}
+                <button
+                  onClick={() => setCurrentPage(Math.min(Math.max(1, Math.ceil(filteredPosts.length / itemsPerPage)), currentPage + 1))}
+                  disabled={currentPage === Math.max(1, Math.ceil(filteredPosts.length / itemsPerPage))}
                   className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   <ChevronRight className="h-4 w-4 text-gray-600" />

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, ReactElement } from 'react';
-import { ChevronLeft, ChevronRight, Star, Plus, X, User, Building, Mail, MessageSquare } from 'lucide-react';
+import { Star, Plus, X, User, Building, Mail, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 
 // Define interfaces for type safety
@@ -75,9 +75,9 @@ declare global {
 }
 
 const TestimonialsCarousel: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState<boolean>(false);
+  const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
   const [loggedInUser, setLoggedInUser] = useState<LoggedInUser | null>(null);
   const [feedbackText, setFeedbackText] = useState<string>('');
   const [organization, setOrganization] = useState<string>('');
@@ -89,7 +89,7 @@ const TestimonialsCarousel: React.FC = () => {
       role: "Research Engineer, SUTD",
       image: "https://ik.imagekit.io/9dtagplxz/WhatsApp%20Image%202025-09-19%20at%2022.50.30_6a4c9f03.jpg?updatedAt=1758302547543",
       rating: 4,
-      text: "Working with Januda has been a truly rewarding experience. He consistently demonstrates exceptional technical expertise, dedication, and a proactive approach to every task. His ability to think critically and find innovative solutions to challenges sets him apart. Beyond his skills, Januda’s positive attitude, teamwork, and strong communication make him a valuable asset to any team or organization."
+      text: "Working with Januda has been a truly rewarding experience. He consistently demonstrates exceptional technical expertise, dedication, and a proactive approach to every task. His ability to think critically and find innovative solutions to challenges sets him apart. Beyond his skills, Januda's positive attitude, teamwork, and strong communication make him a valuable asset to any team or organization."
     },
     {
       id: 2,
@@ -107,7 +107,7 @@ const TestimonialsCarousel: React.FC = () => {
       rating: 5,
       text: "Januda did an excellent job creating the WEBEATS website. His creativity, technical skills, and attention to detail made the site both functional and visually appealing. He handled the project with professionalism and dedication, ensuring every part was done to the highest standard. I highly recommend Januda for his outstanding work."
     },
-    
+
   ]);
 
   const API_URL = "https://feedbk-1.onrender.com/api/recommendations";
@@ -137,7 +137,7 @@ const TestimonialsCarousel: React.FC = () => {
           rating: 5,
           text: rec.feedback
         }));
-        
+
         setTestimonialsList(prev => {
           const existingIds = prev.map(t => t.id);
           const newTestimonials = apiTestimonials.filter(t => !existingIds.includes(t.id));
@@ -154,13 +154,13 @@ const TestimonialsCarousel: React.FC = () => {
     try {
       // Decode the Google JWT token
       const data: GoogleUserData = JSON.parse(atob(response.credential.split(".")[1]));
-      
+
       const user: LoggedInUser = {
         name: data.name,
         email: data.email,
         avatarUrl: data.picture
       };
-      
+
       setLoggedInUser(user);
     } catch (error) {
       console.error('Error parsing Google credential:', error);
@@ -181,7 +181,7 @@ const TestimonialsCarousel: React.FC = () => {
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
-      
+
       script.onload = (): void => {
         initializeGoogle();
       };
@@ -196,7 +196,7 @@ const TestimonialsCarousel: React.FC = () => {
     const initializeGoogle = (): void => {
       // Make handleCredentialResponse globally available
       window.handleCredentialResponse = handleCredentialResponse;
-      
+
       // Initialize Google Sign-In
       if (window.google && window.google.accounts) {
         try {
@@ -220,30 +220,6 @@ const TestimonialsCarousel: React.FC = () => {
     loadRecommendations();
   }, [loadRecommendations, handleCredentialResponse]);
 
-  const nextSlide = useCallback((): void => {
-    setCurrentIndex((prevIndex) => {
-      const nextIndex = prevIndex + 1;
-      return nextIndex >= testimonialsList.length ? 0 : nextIndex;
-    });
-  }, [testimonialsList.length]);
-
-  const prevSlide = (): void => {
-    setCurrentIndex((prevIndex) => {
-      const prevIdx = prevIndex - 1;
-      return prevIdx < 0 ? testimonialsList.length - 1 : prevIdx;
-    });
-  };
-
-  // Auto-play logic with proper cleanup
-  useEffect(() => {
-    if (!isPaused && !showFeedbackForm) {
-      const interval = setInterval(() => {
-        nextSlide();
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [currentIndex, isPaused, showFeedbackForm, nextSlide]);
-
   const handleMouseEnter = (): void => setIsPaused(true);
   const handleMouseLeave = (): void => setIsPaused(false);
   const handleTouchStart = (): void => setIsPaused(true);
@@ -263,14 +239,14 @@ const TestimonialsCarousel: React.FC = () => {
   // Handle "Your Feedback" button click
   const handleYourFeedbackClick = (): void => {
     setShowFeedbackForm(true);
-    
+
     // Small delay to ensure modal is rendered, then render Google button
     setTimeout(() => {
       if (window.google && window.google.accounts && !loggedInUser) {
         const signInContainer = document.getElementById('google-signin-container');
         if (signInContainer) {
           signInContainer.innerHTML = '';
-          
+
           try {
             const buttonConfig: GoogleButtonConfig = {
               theme: 'outline',
@@ -294,12 +270,12 @@ const TestimonialsCarousel: React.FC = () => {
     if (!loggedInUser || !feedbackText.trim()) return;
 
     setIsSubmitting(true);
-    
+
     try {
       const response = await fetch(API_URL, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json" 
+        headers: {
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           fullName: loggedInUser.name,
@@ -321,14 +297,14 @@ const TestimonialsCarousel: React.FC = () => {
         };
 
         setTestimonialsList(prev => [...prev, newTestimonial]);
-        
+
         setFeedbackText('');
         setOrganization('');
         setShowFeedbackForm(false);
         setLoggedInUser(null);
-        
+
         alert('Thank you for your feedback! It has been submitted successfully.');
-        
+
         setTimeout(() => {
           loadRecommendations();
         }, 1000);
@@ -361,150 +337,155 @@ const TestimonialsCarousel: React.FC = () => {
     }
   };
 
-  // Determine if we should show one or two testimonials based on screen size
-  const [itemsToShow, setItemsToShow] = useState(1);
-  
-  useEffect(() => {
-    const updateItemsToShow = () => {
-      if (window.innerWidth >= 1024) {
-        setItemsToShow(2);
-      } else if (window.innerWidth >= 768) {
-        setItemsToShow(1);
-      } else {
-        setItemsToShow(1);
-      }
-    };
-    
-    updateItemsToShow();
-    window.addEventListener('resize', updateItemsToShow);
-    return () => window.removeEventListener('resize', updateItemsToShow);
-  }, []);
+  // Duplicate the list so the marquee can loop seamlessly (we scroll exactly
+  // -50% of the track width, which is the width of one full copy of the list)
+  const marqueeItems = [...testimonialsList, ...testimonialsList];
 
-  // Calculate visible testimonials
-  const visibleTestimonials = [];
-  for (let i = 0; i < itemsToShow; i++) {
-    const index = (currentIndex + i) % testimonialsList.length;
-    visibleTestimonials.push(testimonialsList[index]);
-  }
+  // Pause the CSS animation whenever the row is hovered/touched OR any modal is open
+  const animationPaused = isPaused || showFeedbackForm || !!selectedTestimonial;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:py-12 sm:px-6 lg:py-16 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-6 sm:p-8 md:p-10 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 sm:h-2 bg-gradient-to-r from-green-400 via-green-500 to-green-600"></div>
-          
-          <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-            {/* Left Section */}
-            <div className="lg:w-1/3 flex flex-col justify-center">
-              <p className="text-orange-500 font-semibold text-base sm:text-lg mb-3 sm:mb-4 tracking-wide">
-                My Testimonials
-              </p>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6 sm:mb-8">
-                What They&apos;re
-                <br />
-                Talking About
-                <br />
-                <span className="text-green-600">Januda</span>
-              </h1>
-              <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-6 sm:mb-8">
-                Authentic stories and endorsements from satisfied clients.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-           
-                <button 
-                  onClick={handleYourFeedbackClick}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 w-full sm:w-fit"
-                >
-                  <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>Your Feedback</span>
-                </button>
+
+          <div className="flex flex-col gap-8">
+            {/* Top Section */}
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+              <div>
+                <p className="text-orange-500 font-semibold text-base sm:text-lg mb-3 sm:mb-4 tracking-wide">
+                  My Testimonials
+                </p>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-3 sm:mb-4">
+                  What They&apos;re Talking About{' '}
+                  <span className="text-green-600">Januda</span>
+                </h1>
+                <p className="text-gray-600 text-base sm:text-lg leading-relaxed">
+                  Authentic stories and endorsements from satisfied clients. Click any card to read the full recommendation.
+                </p>
               </div>
+              <button
+                onClick={handleYourFeedbackClick}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 w-full sm:w-fit flex-shrink-0"
+              >
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Your Feedback</span>
+              </button>
             </div>
 
-            {/* Right Section - Testimonials */}
-            <div 
-              className="lg:w-2/3 relative" 
-              onMouseEnter={handleMouseEnter} 
+            {/* Auto-scrolling row of testimonials */}
+            <div
+              className="relative overflow-hidden marquee-mask"
+              onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
             >
-              <div className="flex flex-col sm:flex-row gap-6 overflow-hidden">
-                {visibleTestimonials.map((testimonial, index) => (
-                  <div
+              <div
+                className="flex gap-6 w-max marquee-track"
+                style={{ animationPlayState: animationPaused ? 'paused' : 'running' }}
+              >
+                {marqueeItems.map((testimonial, index) => (
+                  <button
+                    type="button"
                     key={`${testimonial.id}-${index}`}
-                    className="flex-1 bg-gray-50 rounded-xl sm:rounded-2xl p-6 sm:p-8 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                    onClick={() => setSelectedTestimonial(testimonial)}
+                    className="text-left flex-shrink-0 w-[260px] sm:w-[320px] lg:w-[360px] bg-gray-50 rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-7 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col min-h-[280px] sm:min-h-[300px] cursor-pointer border border-transparent hover:border-green-200"
                   >
-                    <div className="flex items-center mb-4 sm:mb-6">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-3 sm:border-4 border-green-200 mr-3 sm:mr-4 transition-transform duration-300 hover:scale-110 relative">
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 sm:border-3 border-green-200 mr-3 relative flex-shrink-0">
                         <Image
                           src={testimonial.image}
                           alt={testimonial.name}
                           fill
                           className="object-cover"
-                          sizes="(max-width: 640px) 56px, (max-width: 1024px) 64px, 80px"
+                          sizes="56px"
                           onError={(e) => handleImageError(e, testimonial.name.includes('@') ? testimonial.name : undefined)}
                         />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <User className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
-                          <h3 className="font-bold text-lg sm:text-xl text-gray-900">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <User className="w-3 h-3 text-green-600 flex-shrink-0" />
+                          <h3 className="font-bold text-base sm:text-lg text-gray-900 truncate">
                             {testimonial.name}
                           </h3>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600 text-sm">
-                          <Building className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
-                          <p>{testimonial.role}</p>
+                        <div className="flex items-center gap-1.5 text-gray-600 text-xs sm:text-sm">
+                          <Building className="w-3 h-3 text-green-600 flex-shrink-0" />
+                          <p className="truncate">{testimonial.role}</p>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="flex mb-3 sm:mb-4">
+
+                    <div className="flex mb-3">
                       {renderStars(testimonial.rating)}
                     </div>
-                    
-                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
+
+                    <p className="text-gray-700 text-sm leading-relaxed line-clamp-5 flex-1">
                       {testimonial.text}
                     </p>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Navigation Arrows - Only show on desktop */}
-              <div className="hidden lg:flex justify-center mt-6 sm:mt-8 gap-4">
-                <button
-                  onClick={prevSlide}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200 hover:bg-green-500 text-gray-600 hover:text-white transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95"
-                >
-                  <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
-                <button
-                  onClick={nextSlide}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200 hover:bg-green-500 text-gray-600 hover:text-white transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95"
-                >
-                  <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
-              </div>
-              
-              {/* Pagination Dots - Always visible */}
-              <div className="flex justify-center mt-6 gap-2">
-                {testimonialsList.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentIndex(index)}
-                    className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
-                      currentIndex === index
-                        ? 'bg-green-500 scale-125 shadow-md'
-                        : 'bg-gray-300 hover:bg-gray-400'
-                    }`}
-                  />
+
+                    <span className="text-green-600 text-xs font-semibold mt-3">Read full recommendation →</span>
+                  </button>
                 ))}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Full Recommendation Modal (click on a card) */}
+      {selectedTestimonial && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedTestimonial(null)}
+        >
+          <div
+            className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-md sm:max-w-xl transform transition-all duration-300 scale-100 border border-gray-100 max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 sm:p-8">
+              <div className="flex justify-end mb-2">
+                <button
+                  onClick={() => setSelectedTestimonial(null)}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 hover:scale-105"
+                >
+                  <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                </button>
+              </div>
+
+              <div className="flex items-center mb-5 sm:mb-6">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-3 sm:border-4 border-green-200 mr-4 relative flex-shrink-0">
+                  <Image
+                    src={selectedTestimonial.image}
+                    alt={selectedTestimonial.name}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                    onError={(e) => handleImageError(e, selectedTestimonial.name.includes('@') ? selectedTestimonial.name : undefined)}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-xl sm:text-2xl text-gray-900">{selectedTestimonial.name}</h3>
+                  <div className="flex items-center gap-2 text-gray-600 text-sm mt-1">
+                    <Building className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <p>{selectedTestimonial.role}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex mb-4">
+                {renderStars(selectedTestimonial.rating)}
+              </div>
+
+              <p className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-line">
+                {selectedTestimonial.text}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Feedback Form Modal with Improved Design */}
       {showFeedbackForm && (
@@ -645,6 +626,7 @@ const TestimonialsCarousel: React.FC = () => {
                         value={feedbackText}
                         onChange={(e) => setFeedbackText(e.target.value)}
                         rows={4}
+                        maxLength={500}
                         placeholder="Share your experience, thoughts, and suggestions about our service..."
                         className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 resize-none hover:border-gray-400 text-gray-900 placeholder-gray-500 text-sm sm:text-base"
                       />
@@ -686,6 +668,36 @@ const TestimonialsCarousel: React.FC = () => {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .marquee-track {
+          animation: marquee-scroll 35s linear infinite;
+        }
+        @keyframes marquee-scroll {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+        .marquee-mask {
+          -webkit-mask-image: linear-gradient(
+            to right,
+            transparent 0,
+            black 40px,
+            black calc(100% - 40px),
+            transparent 100%
+          );
+          mask-image: linear-gradient(
+            to right,
+            transparent 0,
+            black 40px,
+            black calc(100% - 40px),
+            transparent 100%
+          );
+        }
+      `}</style>
     </div>
   );
 };

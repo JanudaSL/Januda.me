@@ -47,21 +47,21 @@ export default function VegaInnovationsHeader() {
           </a>
           <div className="w-px h-6 bg-gray-400"></div>
           <a 
-            href="#" 
+            href="https://axionixx.netlify.app/" 
             className="text-lg md:text-xl font-light hover:text-gray-800 transition-colors duration-300 border-b-2 border-transparent hover:border-gray-800 pb-1"
           >
             EcoGreen360
           </a>
           <div className="w-px h-6 bg-gray-400"></div>
           <a 
-            href="#" 
+            href="https://axentrajk.netlify.app/" 
             className="text-lg md:text-xl font-light hover:text-gray-800 transition-colors duration-300 border-b-2 border-transparent hover:border-gray-800 pb-1"
           >
-            CypherBots
+            Axentra
           </a>
           <div className="w-px h-6 bg-gray-400"></div>
           <a 
-            href="#" 
+            href="https://neurajk.netlify.app/" 
             className="text-lg md:text-xl font-light hover:text-gray-800 transition-colors duration-300 border-b-2 border-transparent hover:border-gray-800 pb-1"
           >
             Neura Studio

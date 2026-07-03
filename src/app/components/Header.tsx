@@ -14,14 +14,24 @@ const preloadImages = (slides: Slide[]): Promise<void[]> => {
   if (typeof window === 'undefined') {
     return Promise.resolve([]);
   }
-  
+
   return Promise.all(
     slides.map((slide) => {
       return new Promise<void>((resolve) => {
         const img = new Image();
         img.src = slide.bgImage;
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
+
+        // Safety timeout - don't get stuck forever waiting on a slow image
+        const timeout = setTimeout(() => resolve(), 2000);
+
+        img.onload = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
+        img.onerror = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
       });
     })
   );
@@ -63,9 +73,24 @@ const TeslaHeader = memo(() => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let mounted = true;
+
+    // Hard fallback: never let the UI get stuck on the loading screen
+    const fallback = setTimeout(() => {
+      if (mounted) setImagesLoaded(true);
+    }, 2500);
+
     preloadImages(slides).then(() => {
-      setImagesLoaded(true);
+      if (mounted) {
+        clearTimeout(fallback);
+        setImagesLoaded(true);
+      }
     });
+
+    return () => {
+      mounted = false;
+      clearTimeout(fallback);
+    };
   }, []);
 
   const nextSlide = useCallback(() => {
@@ -98,7 +123,7 @@ const TeslaHeader = memo(() => {
     if (!imagesLoaded || !progressRef.current) return;
 
     const progressBar = progressRef.current;
-    
+
     progressBar.style.transition = 'none';
     progressBar.style.width = '0%';
     progressBar.getBoundingClientRect();
@@ -141,7 +166,7 @@ const TeslaHeader = memo(() => {
 
     touchStartRef.current = 0;
     touchEndRef.current = 0;
-    
+
     setTimeout(() => setIsHovered(false), 500);
   };
 
@@ -161,8 +186,8 @@ const TeslaHeader = memo(() => {
   if (!imagesLoaded) {
     return (
       <div className="relative w-full h-screen overflow-hidden bg-black">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
+        <div
+          className="absolute inset-0 bg-cover bg-[center_20%]"
           style={{
             backgroundImage: `url(${slides[0].bgImage})`,
           }}
@@ -181,7 +206,7 @@ const TeslaHeader = memo(() => {
   }
 
   return (
-    <section 
+    <section
       ref={containerRef}
       className="relative w-full h-screen overflow-hidden bg-black group"
       onMouseEnter={() => setIsHovered(true)}
@@ -203,18 +228,18 @@ const TeslaHeader = memo(() => {
             aria-hidden={index !== currentSlide}
           >
             <div
-              className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[2500ms] ease-out ${
+              className={`absolute inset-0 bg-cover bg-[center_20%] bg-no-repeat transition-transform duration-[2500ms] ease-out ${
                 index === currentSlide ? 'scale-100' : 'scale-130'
               }`}
               style={{
                 backgroundImage: `url(${slide.bgImage})`,
               }}
             />
-            
+
             <div className="absolute inset-0 bg-black/70" />
 
             <div className="relative flex flex-col items-center justify-center h-full text-white text-center px-4 md:px-6 z-10">
-              <h1 
+              <h1
                 className={`text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 md:mb-4 leading-tight px-2 transition-all duration-1000 ${
                   index === currentSlide ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
@@ -224,7 +249,7 @@ const TeslaHeader = memo(() => {
               >
                 {slide.title}
               </h1>
-              <p 
+              <p
                 className={`text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 font-medium opacity-90 max-w-4xl px-4 transition-all duration-1000 ${
                   index === currentSlide ? 'opacity-90 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
@@ -251,7 +276,7 @@ const TeslaHeader = memo(() => {
       >
         <ChevronLeft className="w-5 h-5 xs:w-5 xs:h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
       </button>
-      
+
       <button
         onClick={nextSlide}
         className="absolute right-2 xs:right-3 sm:right-4 md:right-6 top-1/2 transform -translate-y-1/2 z-20 
