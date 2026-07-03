@@ -79,7 +79,7 @@ export default function JanudaProjectsHero() {
             </motion.div>
 
             <motion.p
-              className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl text-gray-700 leading-relaxed font-light max-w-md lg:max-w-lg md:mt-16 lg:mt-32 xl:mt-40"
+              className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl text-gray-700 leading-relaxed font-light max-w-md lg:max-w-lg mt-25 sm:mt-6 md:mt-16 lg:mt-32 xl:mt-40"
               variants={itemFadeUp}
             >
               Discover a range of innovative software projects designed to solve real-world challenges with precision

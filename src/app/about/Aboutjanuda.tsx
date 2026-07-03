@@ -1,3 +1,5 @@
+"use client";
+
 import { Poppins } from "next/font/google";
 
 const poppins = Poppins({
@@ -19,14 +21,21 @@ export default function AboutVideo() {
           </p>
         </div>
 
-        <div className="w-full overflow-hidden rounded-xl">
+        <div
+          className="w-full overflow-hidden rounded-xl select-none"
+          onContextMenu={(e) => e.preventDefault()}
+        >
           <video
             src="/ai.mp4"
             autoPlay
             loop
             muted
             playsInline
-            className="h-full w-full object-cover"
+            controls={false}
+            controlsList="nodownload noremoteplayback noplaybackrate"
+            disablePictureInPicture
+            onContextMenu={(e) => e.preventDefault()}
+            className="h-full w-full object-cover pointer-events-none"
           />
         </div>
       </div>

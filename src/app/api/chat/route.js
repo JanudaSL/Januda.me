@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+const GEMINI_BASE_URL = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
 
 // Comprehensive knowledge base about Januda from his profile
 const JANUDA_CONTEXT = `
@@ -124,20 +127,6 @@ export async function POST(request) {
       );
     }
 
-    const geminiKey = process.env.GEMINI_API_KEY;
-    const genAI = new GoogleGenerativeAI(geminiKey);
-    const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
-
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.8,
-        topK: 40,
-        maxOutputTokens: 1024,
-      },
-    });
-
     // Enhanced prompt for better contextual understanding
     const prompt = `${JANUDA_CONTEXT}
 
@@ -153,21 +142,49 @@ Instructions:
 
 Please provide a helpful and professional response:`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    let answer = 'Sorry, I could not generate a response. Please try again.';
+    const authHeaders = GEMINI_API_KEY?.startsWith('ya29.') || GEMINI_API_KEY?.startsWith('AQ') || GEMINI_API_KEY?.startsWith('eyJ') || GEMINI_API_KEY?.startsWith('4/')
+      ? { Authorization: `Bearer ${GEMINI_API_KEY}` }
+      : { 'x-goog-api-key': GEMINI_API_KEY };
 
-    if (response) {
-      if (typeof response.text === 'function') {
-        answer = response.text();
-      } else if (response.candidates?.[0]?.content) {
-        answer = Array.isArray(response.candidates[0].content)
-          ? response.candidates[0].content.map((part) => part.text || '').join('')
-          : response.candidates[0].content.text || answer;
-      }
+    const geminiResponse = await fetch(`${GEMINI_BASE_URL}/models/${GEMINI_MODEL}:generateContent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      body: JSON.stringify({
+        prompt: { text: prompt },
+        temperature: 0.7,
+        topP: 0.8,
+        topK: 40,
+        maxOutputTokens: 1024,
+      }),
+    });
+
+    const rawText = await geminiResponse.text();
+    let payload;
+    try {
+      payload = rawText ? JSON.parse(rawText) : {};
+    } catch (parseError) {
+      throw new Error(`Invalid Gemini JSON response: ${parseError.message}`);
     }
 
-    return NextResponse.json({ 
+    if (!geminiResponse.ok) {
+      const errorMessage = payload?.error?.message || payload?.message || rawText || geminiResponse.statusText;
+      throw new Error(`Gemini API error ${geminiResponse.status}: ${errorMessage}`);
+    }
+
+    let answer = 'Sorry, I could not generate a response. Please try again.';
+    if (typeof payload?.response?.text === 'string') {
+      answer = payload.response.text;
+    } else if (Array.isArray(payload?.candidates) && payload.candidates[0]?.content) {
+      const content = payload.candidates[0].content;
+      answer = Array.isArray(content)
+        ? content.map((item) => item?.text || '').join('')
+        : content.text || answer;
+    }
+
+    return NextResponse.json({
       answer: answer.trim(),
       timestamp: new Date().toISOString(),
       question: trimmedQuestion

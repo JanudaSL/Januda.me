@@ -42,7 +42,7 @@ export default function AboutMeHero() {
             </motion.h1>
 
             <motion.p
-              className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl text-gray-700 leading-relaxed font-light max-w-md lg:max-w-lg md:mt-16 lg:mt-32 xl:mt-40"
+              className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl text-gray-700 leading-relaxed font-light max-w-md lg:max-w-lg mt-58 sm:mt-6 md:mt-16 lg:mt-32 xl:mt-40"
               variants={itemFadeUp}
             >
               Explore our wide range of quality products tailored to meet your every need
