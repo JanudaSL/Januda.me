@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
 /* ── design tokens ──────────────────────────────────────────────
    ink    #0E1116  text on light / dark surfaces
@@ -43,18 +43,19 @@ const FOCUS_AREAS = ['Mentoring', 'Student communities', 'Software engineering']
 // Staggered entrance: eyebrow → name → tagline → divider → bio → quote →
 // tags → status dot each ease in slightly after the one before, instead
 // of the whole block popping in at once.
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: {},
   visible: {
     transition: { staggerChildren: 0.12, delayChildren: 0.08 },
   },
 };
-const itemVariants = {
+
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 22 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] as const },
   },
 };
 
@@ -128,7 +129,7 @@ export default function AboutJanuda() {
               className="about-photo w-full h-full object-cover"
               initial={{ opacity: 0, scale: 1.18, filter: 'blur(14px)' }}
               animate={{ opacity: 1, filter: 'blur(0px)' }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] as const }}
               style={{
                 objectPosition: '50% 15%',
                 filter: 'url(#sharpenAbout)',
