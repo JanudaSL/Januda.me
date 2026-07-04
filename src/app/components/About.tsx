@@ -101,7 +101,7 @@ export default function AboutJanuda() {
 
       {/* Full viewport width — no max-w wrapper, breaks out to the true edges of the screen */}
       <section className="w-full bg-[#FAFAF8] font-sans-brand">
-        <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-[70vh] lg:min-h-[80vh]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 w-full lg:min-h-[80vh]">
 
           {/* Image — full bleed, edge to edge, full height of the row on desktop.
               On mobile the section stacks (image above content), so no fade mask —
@@ -153,7 +153,7 @@ export default function AboutJanuda() {
               variants={containerVariants}
               initial="hidden"
               animate={content.visible ? 'visible' : 'hidden'}
-              className="w-full px-5 sm:px-12 lg:px-16 py-10 sm:py-12 lg:py-0 max-w-xl"
+              className="w-full px-5 sm:px-12 lg:px-16 py-6 sm:py-12 lg:py-0 max-w-xl"
             >
               <motion.p
                 variants={itemVariants}

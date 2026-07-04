@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Chatbot from "./components/Chatbot";
 import StructuredData from "./components/StructuredData";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -101,6 +102,8 @@ export default function RootLayout({
         <Footer />
         <Chatbot />
       </body>
+
+      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
     </html>
   );
 }

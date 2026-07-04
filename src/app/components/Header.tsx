@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, memo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 
 interface Slide {
   id: number;
@@ -10,8 +10,10 @@ interface Slide {
   bgImage: string;
 }
 
+const SLIDE_DURATION = 2500; // ms — keep in sync with progress bar animation
+
 const preloadImages = (slides: Slide[]): Promise<void[]> => {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return Promise.resolve([]);
   }
 
@@ -42,7 +44,7 @@ const slides: Slide[] = [
     id: 1,
     title: "Crafting Innovative Software",
     subtitle: "Building modern web and mobile applications",
-    bgImage: "/coverse.webp",
+    bgImage: "/nw1.jpeg",
   },
   {
     id: 2,
@@ -59,19 +61,39 @@ const slides: Slide[] = [
   {
     id: 4,
     title: "Innovation Through Competition",
-    subtitle: "Creating real-world solutions by learning through competitive innovation.",
+    subtitle:
+      "Creating real-world solutions by learning through competitive innovation.",
     bgImage: "/bal2.webp",
   },
 ];
 
 const TeslaHeader = memo(() => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isPaused, setIsPaused] = useState(false); // manual pause only (hover no longer pauses)
   const [imagesLoaded, setImagesLoaded] = useState(false);
+
+  // Bumped whenever the tab becomes visible again, so the rAF effect
+  // (which depends on it) is forced to restart cleanly from wherever
+  // elapsedRef left off. Fixes: carousel freezing forever after the tab
+  // was backgrounded and then refocused.
+  const [resumeSignal, setResumeSignal] = useState(0);
+
+  // Flips to true one frame after mount/load, so the very first slide's
+  // Ken-Burns zoom actually has a state change to transition from
+  // (scale-100 -> scale-110) instead of mounting directly at scale-110
+  // with nothing to animate. Fixes: first-load slide not zooming in.
+  const [zoomStarted, setZoomStarted] = useState(false);
+
   const progressRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Timer bookkeeping — a single source of truth so the slide advance and
+  // the progress bar can never drift out of sync with each other.
+  const rafRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const elapsedRef = useRef<number>(0); // ms already elapsed in the current slide (for resume after pause)
+
+  // ---------- preload ----------
   useEffect(() => {
     let mounted = true;
 
@@ -93,57 +115,108 @@ const TeslaHeader = memo(() => {
     };
   }, []);
 
+  // ---------- kick off the first zoom one frame after images are ready ----------
+  useEffect(() => {
+    if (!imagesLoaded) return;
+    const id = requestAnimationFrame(() => setZoomStarted(true));
+    return () => cancelAnimationFrame(id);
+  }, [imagesLoaded]);
+
+  // ---------- slide navigation ----------
+  const goToSlide = useCallback((index: number, resetElapsed = true) => {
+    setCurrentSlide(index);
+    if (resetElapsed) elapsedRef.current = 0;
+  }, []);
+
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
+    elapsedRef.current = 0;
   }, []);
 
   const prevSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    elapsedRef.current = 0;
   }, []);
 
-  const goToSlide = useCallback((index: number) => {
-    setCurrentSlide(index);
-  }, []);
+  const handleManualNav = useCallback(
+    (action: () => void) => {
+      action();
+    },
+    []
+  );
 
+  // ---------- single rAF loop drives both the progress bar AND the advance ----------
   useEffect(() => {
-    if (isHovered || !imagesLoaded) return;
+    if (!imagesLoaded) return;
 
-    timerRef.current = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 3000);
+    // If paused, stop the loop but remember how far we got.
+    if (isPaused) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      return;
+    }
+
+    startTimeRef.current = performance.now() - elapsedRef.current;
+
+    const tick = (now: number) => {
+      const elapsed = now - startTimeRef.current;
+      elapsedRef.current = elapsed;
+      const pct = Math.min((elapsed / SLIDE_DURATION) * 100, 100);
+
+      if (progressRef.current) {
+        progressRef.current.style.width = `${pct}%`;
+      }
+
+      if (elapsed >= SLIDE_DURATION) {
+        elapsedRef.current = 0;
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+        return; // effect re-runs due to currentSlide change, restarting the loop cleanly
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
 
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+    // currentSlide and resumeSignal are intentionally included so each slide
+    // change AND each tab-refocus restarts a fresh timing loop
+  }, [isPaused, imagesLoaded, currentSlide, resumeSignal]);
+
+  // Reset progress bar width instantly when the slide changes (no animation carry-over)
+  useEffect(() => {
+    if (!progressRef.current) return;
+    if (elapsedRef.current === 0) {
+      progressRef.current.style.transition = "none";
+      progressRef.current.style.width = "0%";
+    }
+  }, [currentSlide]);
+
+  // ---------- pause when the tab isn't visible, resume cleanly when it comes back ----------
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        // Freeze exactly where we are; don't let a throttled background tab
+        // suddenly "catch up" and skip several slides at once.
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      } else {
+        // Force the rAF loop to restart from the current elapsed position.
+        startTimeRef.current = performance.now() - elapsedRef.current;
+        setResumeSignal((s) => s + 1);
       }
     };
-  }, [isHovered, imagesLoaded]);
 
-  useEffect(() => {
-    if (!imagesLoaded || !progressRef.current) return;
-
-    const progressBar = progressRef.current;
-
-    progressBar.style.transition = 'none';
-    progressBar.style.width = '0%';
-    progressBar.getBoundingClientRect();
-    progressBar.style.transition = 'width 5s linear';
-    progressBar.style.width = '100%';
-
-  }, [currentSlide, imagesLoaded]);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
+  // ---------- touch swipe ----------
   const touchStartRef = useRef(0);
   const touchEndRef = useRef(0);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = e.touches[0].clientX;
-    setIsHovered(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -151,53 +224,52 @@ const TeslaHeader = memo(() => {
   };
 
   const handleTouchEnd = () => {
-    if (!touchStartRef.current || !touchEndRef.current) return;
+    if (touchStartRef.current && touchEndRef.current) {
+      const diff = touchStartRef.current - touchEndRef.current;
+      const minSwipeDistance = 50;
 
-    const diff = touchStartRef.current - touchEndRef.current;
-    const minSwipeDistance = 50;
-
-    if (Math.abs(diff) > minSwipeDistance) {
-      if (diff > 0) {
-        nextSlide();
-      } else {
-        prevSlide();
+      if (Math.abs(diff) > minSwipeDistance) {
+        if (diff > 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
       }
     }
 
     touchStartRef.current = 0;
     touchEndRef.current = 0;
-
-    setTimeout(() => setIsHovered(false), 500);
   };
 
+  // ---------- keyboard ----------
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        prevSlide();
-      } else if (e.key === 'ArrowRight') {
-        nextSlide();
+      if (e.key === "ArrowLeft") prevSlide();
+      else if (e.key === "ArrowRight") nextSlide();
+      else if (e.key === " ") {
+        e.preventDefault();
+        setIsPaused((p) => !p);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [nextSlide, prevSlide]);
 
+  // ---------- loading state ----------
   if (!imagesLoaded) {
     return (
-      <div className="relative w-full h-screen overflow-hidden bg-black">
+      <div className="relative w-full h-screen h-dvh overflow-hidden bg-black">
         <div
           className="absolute inset-0 bg-cover bg-[center_20%]"
-          style={{
-            backgroundImage: `url(${slides[0].bgImage})`,
-          }}
+          style={{ backgroundImage: `url(${slides[0].bgImage})` }}
         />
-        <div className="absolute inset-0 bg-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/60" />
         <div className="relative flex flex-col items-center justify-center h-full text-white text-center px-4 z-10">
-          <h1 className="text-3xl md:text-6xl font-bold mb-4 leading-tight">
+          <h1 className="text-3xl md:text-6xl font-medium tracking-tight mb-4 leading-tight text-white">
             {slides[0].title}
           </h1>
-          <p className="text-lg md:text-2xl mb-8 font-medium opacity-90">
+          <p className="text-lg md:text-2xl mb-8 font-normal text-white/80 leading-relaxed">
             {slides[0].subtitle}
           </p>
         </div>
@@ -208,9 +280,7 @@ const TeslaHeader = memo(() => {
   return (
     <section
       ref={containerRef}
-      className="relative w-full h-screen overflow-hidden bg-black group"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="relative w-full h-screen h-dvh overflow-hidden bg-black group"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -218,93 +288,156 @@ const TeslaHeader = memo(() => {
       role="region"
       aria-roledescription="carousel"
     >
-      <div className="relative w-full h-full">
+      {/*
+        Background layer — position:absolute, clipped to this section only
+        (overflow-hidden on the <section> above).
+      */}
+      <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
         {slides.map((slide, index) => (
           <div
             key={slide.id}
             className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+              index === currentSlide ? "opacity-100" : "opacity-0"
             }`}
-            aria-hidden={index !== currentSlide}
           >
+            {/*
+              Ken-Burns zoom via transform:scale.
+              Reset (inactive) -> duration-0, snaps back instantly.
+              Active -> duration-[7000ms], eases up to scale-110.
+
+              `zoomStarted` gates the very first paint: on mount every slide
+              renders at scale-100 (no transition to trigger yet). One frame
+              later zoomStarted flips true, the active slide's class changes
+              to scale-110, and THAT class change is what the CSS transition
+              actually animates. Without this gate the first-active slide
+              used to mount already at scale-110 with nothing to animate
+              from, so its zoom never visibly played.
+            */}
             <div
-              className={`absolute inset-0 bg-cover bg-[center_20%] bg-no-repeat transition-transform duration-[2500ms] ease-out ${
-                index === currentSlide ? 'scale-100' : 'scale-130'
+              className={`absolute inset-0 bg-cover bg-[center_20%] bg-no-repeat transition-transform ease-out will-change-transform ${
+                index === currentSlide && zoomStarted
+                  ? "duration-[7000ms] scale-110"
+                  : "duration-0 scale-100"
               }`}
-              style={{
-                backgroundImage: `url(${slide.bgImage})`,
-              }}
+              style={{ backgroundImage: `url(${slide.bgImage})` }}
             />
-
-            <div className="absolute inset-0 bg-black/70" />
-
-            <div className="relative flex flex-col items-center justify-center h-full text-white text-center px-4 md:px-6 z-10">
-              <h1
-                className={`text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 md:mb-4 leading-tight px-2 transition-all duration-1000 ${
-                  index === currentSlide ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                }`}
-                style={{
-                  transitionDelay: index === currentSlide ? '300ms' : '0ms'
-                }}
-              >
-                {slide.title}
-              </h1>
-              <p
-                className={`text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 font-medium opacity-90 max-w-4xl px-4 transition-all duration-1000 ${
-                  index === currentSlide ? 'opacity-90 translate-y-0' : 'opacity-0 translate-y-8'
-                }`}
-                style={{
-                  transitionDelay: index === currentSlide ? '600ms' : '0ms'
-                }}
-              >
-                {slide.subtitle}
-              </p>
-            </div>
+            {/* Richer gradient: darker at the bottom for the controls, softer through the middle for text contrast */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/55" />
           </div>
         ))}
       </div>
 
+      {/* Foreground text — sits above the background layer */}
+      <div className="relative z-10 w-full h-full">
+        {slides.map((slide, index) => (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 flex flex-col items-center justify-center h-full text-white text-center px-4 md:px-6 transition-opacity duration-1000 ease-in-out ${
+              index === currentSlide
+                ? "opacity-100"
+                : "opacity-0 pointer-events-none"
+            }`}
+            aria-hidden={index !== currentSlide}
+          >
+            <span
+              className={`uppercase tracking-[0.3em] text-xs md:text-sm text-white/60 mb-4 transition-all duration-1000 ${
+                index === currentSlide
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+              }`}
+              style={{ transitionDelay: index === currentSlide ? "150ms" : "0ms" }}
+            >
+              {`0${index + 1} / 0${slides.length}`}
+            </span>
+
+            <h1
+              className={`text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-medium tracking-tight mb-3 md:mb-4 leading-tight px-2 transition-all duration-1000 text-white ${
+                index === currentSlide
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              }`}
+              style={{
+                transitionDelay: index === currentSlide ? "300ms" : "0ms",
+              }}
+            >
+              {slide.title}
+            </h1>
+            <p
+              className={`text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 font-normal text-white/80 leading-relaxed max-w-4xl px-4 transition-all duration-1000 ${
+                index === currentSlide
+                  ? "opacity-90 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              }`}
+              style={{
+                transitionDelay: index === currentSlide ? "600ms" : "0ms",
+              }}
+            >
+              {slide.subtitle}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Prev / Next — always faintly visible on touch devices, fuller on hover */}
       <button
-        onClick={prevSlide}
+        onClick={() => handleManualNav(prevSlide)}
         className="absolute left-2 xs:left-3 sm:left-4 md:left-6 top-1/2 transform -translate-y-1/2 z-20 
-                   bg-white/20 hover:bg-white/40 active:bg-white/50 backdrop-blur-md
+                   bg-white/10 hover:bg-white/30 active:bg-white/40 backdrop-blur-md
+                   border border-white/10 hover:border-white/30
                    rounded-full p-2 xs:p-2 sm:p-3 transition-all duration-200 
                    focus:outline-none focus:ring-2 focus:ring-white/50 active:scale-95
                    min-w-[44px] min-h-[44px] flex items-center justify-center
-                   opacity-0 hover:opacity-100 group-hover:opacity-100"
+                   opacity-40 md:opacity-0 hover:opacity-100 group-hover:opacity-100"
         aria-label="Previous slide"
       >
         <ChevronLeft className="w-5 h-5 xs:w-5 xs:h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
       </button>
 
       <button
-        onClick={nextSlide}
+        onClick={() => handleManualNav(nextSlide)}
         className="absolute right-2 xs:right-3 sm:right-4 md:right-6 top-1/2 transform -translate-y-1/2 z-20 
-                   bg-white/20 hover:bg-white/40 active:bg-white/50 backdrop-blur-md
+                   bg-white/10 hover:bg-white/30 active:bg-white/40 backdrop-blur-md
+                   border border-white/10 hover:border-white/30
                    rounded-full p-2 xs:p-2 sm:p-3 transition-all duration-200 
                    focus:outline-none focus:ring-2 focus:ring-white/50 active:scale-95
                    min-w-[44px] min-h-[44px] flex items-center justify-center
-                   opacity-0 hover:opacity-100 group-hover:opacity-100"
+                   opacity-40 md:opacity-0 hover:opacity-100 group-hover:opacity-100"
         aria-label="Next slide"
       >
         <ChevronRight className="w-5 h-5 xs:w-5 xs:h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
       </button>
 
-      <div className="absolute bottom-20 xs:bottom-22 sm:bottom-24 left-1/2 transform -translate-x-1/2 flex space-x-2 xs:space-x-3 z-20">
+      {/* Pause / play toggle */}
+      <button
+        onClick={() => setIsPaused((p) => !p)}
+        className="absolute bottom-6 left-4 md:left-6 z-20 flex items-center gap-2
+                   bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10
+                   rounded-full px-3 py-2 transition-all duration-200
+                   focus:outline-none focus:ring-2 focus:ring-white/50"
+        aria-label={isPaused ? "Play slideshow" : "Pause slideshow"}
+      >
+        {isPaused ? (
+          <Play className="w-3.5 h-3.5 text-white" fill="currentColor" />
+        ) : (
+          <Pause className="w-3.5 h-3.5 text-white" fill="currentColor" />
+        )}
+      </button>
+
+      {/* Dots */}
+      <div className="absolute bottom-20 xs:bottom-22 sm:bottom-24 left-1/2 transform -translate-x-1/2 flex items-center space-x-2 xs:space-x-3 z-20">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white ${
+            className={`transition-all duration-300 rounded-full focus:outline-none focus:ring-2 focus:ring-white hover:scale-125 ${
               index === currentSlide
                 ? "bg-white scale-110"
-                : "bg-white/50 hover:bg-white/75 active:bg-white/90"
+                : "bg-white/40 hover:bg-white/70"
             }`}
             style={{
-              width: index === currentSlide ? '20px' : '12px',
-              height: '12px',
-              borderRadius: '6px',
-              minWidth: index === currentSlide ? '20px' : '12px',
+              width: index === currentSlide ? "22px" : "10px",
+              height: "10px",
+              minWidth: index === currentSlide ? "22px" : "10px",
             }}
             aria-label={`Go to slide ${index + 1}`}
             aria-current={index === currentSlide}
@@ -312,11 +445,12 @@ const TeslaHeader = memo(() => {
         ))}
       </div>
 
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20 z-20">
+      {/* Progress bar */}
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-white/15 z-20">
         <div
           ref={progressRef}
           className="h-full bg-white"
-          style={{ width: "0%" }}
+          style={{ width: "0%", transition: isPaused ? "none" : "width 100ms linear" }}
           aria-hidden="true"
         />
       </div>

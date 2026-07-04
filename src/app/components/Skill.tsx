@@ -87,7 +87,8 @@ function useScrollReveal(threshold = 0.15) {
 }
 
 // Tracks the lg breakpoint (1024px) so we can flip the portrait's fade
-// direction and dial parallax intensity down for touch devices.
+// direction and dial parallax intensity down for touch devices, and so
+// we know when it's safe to skip mounting the video entirely.
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -112,24 +113,27 @@ const Skills = () => {
     target: sectionRef,
     offset: ["start end", "end start"],
   });
-  // subtle parallax: image drifts a little slower than the page scroll,
-  // and gets a faint scale-in as it enters the viewport.
-  // On mobile the drift is dialed way down — big translateY parallax on a
-  // full-width stacked image reads as jank on touch scroll, not polish.
-  const imageY = useTransform(
-    scrollYProgress,
-    [0, 1],
-    isDesktop ? ["-6%", "6%"] : ["-2%", "2%"]
-  );
+  // subtle parallax: media drifts a little slower than the page scroll,
+  // and gets a faint scale-in as it enters the viewport. Only relevant on
+  // desktop now since the media block doesn't render at all below lg.
+  const imageY = useTransform(scrollYProgress, [0, 1], ["-6%", "6%"]);
   const imageScale = useTransform(
     scrollYProgress,
     [0, 0.5, 1],
-    isDesktop ? [1.06, 1, 1.06] : [1.02, 1, 1.02]
+    [1.06, 1, 1.06]
   );
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Blocks right-click / context menu on the video only — a basic
+  // deterrent against "Save video as...". Not bulletproof (DevTools /
+  // Network tab can still reveal the src), but stops the casual path.
+  const handleVideoContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    return false;
+  };
 
   const skills = [
     // Core Programming Languages
@@ -195,15 +199,12 @@ const Skills = () => {
     { label: "Slack", icon: <FaSlack /> },
   ];
 
-  // Desktop: fades the LEFT edge into the content column (image now sits on
-  // the right, content on the left — so the fade has to ease in from the
-  // left side of the image instead of the right).
-  // Mobile/tablet: fades the bottom edge into the content below (stacked layout).
+  // Desktop-only mask now (mobile/tablet never render this block at all).
+  // Fades the LEFT edge of the media into the content column with a dense
+  // multi-stop curve so it overlaps smoothly with the blend overlay below
+  // instead of leaving a visible seam.
   const desktopMask =
-    "linear-gradient(to left, black 0%, black 38%, rgba(0,0,0,0.92) 48%, rgba(0,0,0,0.75) 58%, rgba(0,0,0,0.55) 68%, rgba(0,0,0,0.36) 78%, rgba(0,0,0,0.2) 88%, rgba(0,0,0,0.08) 95%, transparent 100%)";
-  const mobileMask =
-    "linear-gradient(to bottom, black 0%, black 58%, rgba(0,0,0,0.9) 68%, rgba(0,0,0,0.68) 78%, rgba(0,0,0,0.42) 87%, rgba(0,0,0,0.18) 94%, transparent 100%)";
-  const portraitMask = isDesktop ? desktopMask : mobileMask;
+    "linear-gradient(to left, black 0%, black 30%, rgba(0,0,0,0.96) 40%, rgba(0,0,0,0.88) 50%, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.55) 68%, rgba(0,0,0,0.4) 76%, rgba(0,0,0,0.26) 83%, rgba(0,0,0,0.14) 90%, rgba(0,0,0,0.05) 96%, transparent 100%)";
 
   // Staggered entrance: eyebrow → heading → subcopy → divider → rows each
   // ease in slightly after the one before, instead of the whole block
@@ -294,11 +295,13 @@ const Skills = () => {
         ref={sectionRef}
         className="w-full bg-[#FAFAF8] font-sans-brand"
       >
-        <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-screen">
-          {/* Content — skills + tools. Now the LEFT column on desktop (order-1),
-              stacks BELOW the image on mobile (order-2) so the image still
-              reads first on a phone-width layout. */}
-          <div className="order-2 lg:order-1 flex items-center">
+        {/* Single column on mobile/tablet (media block is hidden entirely
+            below lg, so there's no leftover grid track eating space) —
+            two columns on desktop with content on the left, media on the
+            right. */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 w-full lg:min-h-screen">
+          {/* Content — skills + tools. */}
+          <div className="flex items-center">
             <motion.div
               ref={content.ref}
               variants={containerVariants}
@@ -417,47 +420,81 @@ const Skills = () => {
             </motion.div>
           </div>
 
-          {/* Image — full bleed, now the RIGHT column on desktop (order-2)
-              but still shows FIRST on mobile/tablet (order-1) since the
-              layout stacks there.
-              Desktop: right side stays fully sharp; only the LEFT edge eases
-              into the content column via a multi-stop mask curve.
-              Mobile/tablet: the layout stacks, so the fade stays on the
-              bottom edge, easing the portrait into the content below it.
-              A soft paper-colored gradient overlay sits on top for extra
-              blend, and a gentle scroll parallax gives it depth (toned
-              down on touch devices). */}
-          <div className="order-1 lg:order-2 w-full aspect-[4/5] sm:aspect-[16/10] lg:aspect-auto lg:h-auto relative overflow-hidden bg-[#FAFAF8]">
-            <motion.img
-              src="/jpur.jpeg"
-              alt="Januda J"
-              className="w-full h-full object-cover"
+          {/* Media — DESKTOP ONLY. Completely hidden below the lg breakpoint
+              (no reserved height, no aspect-ratio box, nothing) so mobile
+              and tablet layouts have zero leftover space where the video
+              used to be. On desktop it renders as before: video plays,
+              right-click/save is disabled, left edge eases into the
+              content column via mask + blend overlay. */}
+          <div className="hidden lg:block lg:order-2 w-full h-auto relative overflow-hidden bg-[#FAFAF8]">
+            <motion.div
+              className="absolute inset-0"
               initial={{ opacity: 0, scale: 1.18, filter: "blur(14px)" }}
               animate={{ opacity: 1, filter: "blur(0px)" }}
               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                objectPosition: "50% 20%",
-                filter: "contrast(1.08) saturate(1.08) brightness(1.01)",
                 y: imageY,
                 scale: imageScale,
-                WebkitMaskImage: portraitMask,
-                maskImage: portraitMask,
+                WebkitMaskImage: desktopMask,
+                maskImage: desktopMask,
                 WebkitMaskRepeat: "no-repeat",
                 maskRepeat: "no-repeat",
                 WebkitMaskSize: "100% 100%",
                 maskSize: "100% 100%",
               }}
-            />
-            {/* Extra blend layer — catches any residual hard edge from the mask
-                and melts it into the page background for a seamless finish.
-                On desktop this now washes in from the LEFT side (toward the
-                content column); on mobile/tablet it stays a bottom-side wash. */}
+            >
+              {isMounted && (
+                <div
+                  className="absolute inset-0"
+                  onContextMenu={handleVideoContextMenu}
+                >
+                  <video
+                    src="https://io.webcdn.surge.global/2024-11-05/Technology/H264/Cloud+ComputingcompressedH264.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controls={false}
+                    disablePictureInPicture
+                    draggable={false}
+                    // @ts-expect-error - controlsList is valid HTML but not in React's video typings
+                    controlsList="nodownload noremoteplayback noplaybackrate"
+                    onContextMenu={handleVideoContextMenu}
+                    style={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      width: "150vw",
+                      height: "150vh",
+                      objectFit: "cover",
+                      objectPosition: "50% 20%",
+                      transform: "translate(-50%, -50%) rotate(-90deg)",
+                      filter: "contrast(1.08) saturate(1.08) brightness(1.01)",
+                      pointerEvents: "none",
+                    }}
+                  />
+                  {/* Invisible click-catcher on top of the video so any
+                      click/right-click resolves against this div (which has
+                      its own onContextMenu guard) instead of the <video>
+                      element's native context menu. */}
+                  <div
+                    className="absolute inset-0"
+                    onContextMenu={handleVideoContextMenu}
+                    style={{ background: "transparent" }}
+                  />
+                </div>
+              )}
+            </motion.div>
+
+            {/* Extra blend layer — melts the mask's edge into the page
+                background, washing in from the LEFT toward the content
+                column. Stops mirror the mask curve above so the two
+                overlap smoothly with no visible seam. */}
             <div
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-[48%] lg:inset-y-0 lg:left-0 lg:right-auto lg:bottom-auto lg:h-auto lg:w-[58%]"
+              className="pointer-events-none absolute inset-y-0 left-0 right-auto h-auto w-[65%]"
               style={{
-                background: isDesktop
-                  ? "linear-gradient(to left, transparent 0%, rgba(250,250,248,0) 22%, rgba(250,250,248,0.12) 40%, rgba(250,250,248,0.32) 58%, rgba(250,250,248,0.58) 74%, rgba(250,250,248,0.82) 88%, #FAFAF8 100%)"
-                  : "linear-gradient(to bottom, transparent 0%, rgba(250,250,248,0) 22%, rgba(250,250,248,0.12) 40%, rgba(250,250,248,0.32) 58%, rgba(250,250,248,0.58) 74%, rgba(250,250,248,0.82) 88%, #FAFAF8 100%)",
+                background:
+                  "linear-gradient(to left, transparent 0%, rgba(250,250,248,0) 18%, rgba(250,250,248,0.08) 30%, rgba(250,250,248,0.2) 42%, rgba(250,250,248,0.36) 54%, rgba(250,250,248,0.54) 65%, rgba(250,250,248,0.72) 75%, rgba(250,250,248,0.88) 85%, #FAFAF8 100%)",
               }}
             />
           </div>

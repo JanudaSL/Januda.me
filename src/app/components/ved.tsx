@@ -26,11 +26,12 @@ export default function CompatibilitiesPage() {
   const marketingSrc = isMobile ? MARKETING_VIDEO_MOBILE : MARKETING_VIDEO;
 
   return (
-    <main className="flex min-h-screen w-full flex-col md:flex-row bg-white">
-      <section className="relative w-full md:w-1/2 h-[60vh] md:h-screen flex items-center justify-center">
+    <main className="flex min-h-screen w-full flex-col md:flex-row leading-none">
+      {/* Design side */}
+      <section className="relative w-full md:w-1/2 h-[60vh] md:h-screen flex items-center justify-center overflow-hidden bg-[#FAFAF8]">
         <video
           key={designSrc}
-          className="h-full w-full object-contain"
+          className="block h-full w-full object-contain"
           src={designSrc}
           autoPlay
           muted
@@ -63,10 +64,11 @@ export default function CompatibilitiesPage() {
         </div>
       </section>
 
-      <section className="relative w-full md:w-1/2 h-[60vh] md:h-screen flex items-center justify-center">
+      {/* Marketing side */}
+      <section className="relative w-full md:w-1/2 h-[60vh] md:h-screen flex items-center justify-center overflow-hidden bg-[#131120]">
         <video
           key={marketingSrc}
-          className="h-full w-full object-contain"
+          className="block h-full w-full object-contain"
           src={marketingSrc}
           autoPlay
           muted
