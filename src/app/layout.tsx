@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import Chatbot from "./components/Chatbot";
 import StructuredData from "./components/StructuredData";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import ClarityProvider from "./components/Clarity";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -38,12 +39,11 @@ export const metadata: Metadata = {
   authors: [{ name: "Januda J Kodithuwakku" }],
   creator: "Januda J Kodithuwakku",
 
-  metadataBase: new URL("https://kjanuda.netlify.app"), // ✅ fixed
+  metadataBase: new URL("https://kjanuda.netlify.app"),
 
   openGraph: {
     title: "Januda J Kodithuwakku | Software Engineer",
-    description:
-      "Portfolio of Januda - IoT + AI/ML Developer.",
+    description: "Portfolio of Januda - IoT + AI/ML Developer.",
     url: "https://kjanuda.netlify.app",
     siteName: "Januda Portfolio",
     images: [
@@ -81,8 +81,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      
-      {/* ✅ FIXED AdSense (NO warning now) */}
       <head>
         <script
           async
@@ -92,11 +90,10 @@ export default function RootLayout({
       </head>
 
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
-        
-        {/* ✅ Structured Data (ONLY ONE place) */}
         <StructuredData />
 
-        {/* UI */}
+        <ClarityProvider />
+
         <Navbar />
         {children}
         <Footer />
