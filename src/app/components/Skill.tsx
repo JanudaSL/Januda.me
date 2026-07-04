@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, Variants } from "framer-motion";
 import {
   SiNextdotjs,
   SiReact,
@@ -209,18 +209,18 @@ const Skills = () => {
   // Staggered entrance: eyebrow → heading → subcopy → divider → rows each
   // ease in slightly after the one before, instead of the whole block
   // popping in at once.
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: {},
     visible: {
       transition: { staggerChildren: 0.12, delayChildren: 0.08 },
     },
   };
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 22 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] },
+      transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] as const },
     },
   };
 
@@ -431,7 +431,7 @@ const Skills = () => {
               className="absolute inset-0"
               initial={{ opacity: 0, scale: 1.18, filter: "blur(14px)" }}
               animate={{ opacity: 1, filter: "blur(0px)" }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] as const }}
               style={{
                 y: imageY,
                 scale: imageScale,
@@ -457,7 +457,7 @@ const Skills = () => {
                     controls={false}
                     disablePictureInPicture
                     draggable={false}
-                    // @ts-expect-error - controlsList is valid HTML but not in React's video typings
+                    
                     controlsList="nodownload noremoteplayback noplaybackrate"
                     onContextMenu={handleVideoContextMenu}
                     style={{
