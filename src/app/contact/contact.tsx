@@ -1,6 +1,13 @@
 "use client";
 import React from "react";
 import { motion, Variants } from "framer-motion";
+import { Josefin_Sans } from "next/font/google";
+
+const josefin = Josefin_Sans({
+  subsets: ["latin"],
+  weight: ["200", "300", "400"],
+  display: "swap",
+});
 
 const containerVariants: Variants = {
   hidden: {},
@@ -9,12 +16,21 @@ const containerVariants: Variants = {
 
 const itemFadeUp: Variants = {
   hidden: { opacity: 0, y: 14 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.25, 0.1, 0.25, 1],
+    },
+  },
 };
 
 const IBMContactHero = () => {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section
+      className={`relative min-h-screen flex items-center overflow-hidden ${josefin.className}`}
+    >
       {/* Background Image - fixed on desktop, normal scroll on mobile */}
       <div
         className="absolute inset-0 z-0 bg-black bg-cover bg-center bg-no-repeat bg-scroll md:bg-fixed"
@@ -38,17 +54,19 @@ const IBMContactHero = () => {
             variants={itemFadeUp}
           >
             <motion.h1
-              className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold text-white leading-tight"
+              className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-[200] text-white leading-tight uppercase tracking-[0.18em]"
               variants={itemFadeUp}
             >
               Contact
             </motion.h1>
 
             <motion.p
-              className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl text-gray-200 leading-relaxed font-light max-w-md lg:max-w-lg mt-50 sm:mt-6 md:mt-16 lg:mt-32 xl:mt-40"
+              className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl text-gray-200 leading-relaxed font-[300] max-w-md lg:max-w-lg mt-50 sm:mt-6 md:mt-16 lg:mt-32 xl:mt-40 tracking-[0.045em]"
               variants={itemFadeUp}
             >
-              Find solutions to your questions about projects, development, support, and everything I create. Let's collaborate and build something amazing together
+              Find solutions to your questions about projects, development,
+              support, and everything I create. Let's collaborate and build
+              something amazing together
             </motion.p>
           </motion.div>
 

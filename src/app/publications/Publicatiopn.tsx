@@ -1,20 +1,41 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
+import { Josefin_Sans } from "next/font/google";
+
+const josefin = Josefin_Sans({
+  subsets: ["latin"],
+  weight: ["200", "300", "400"],
+  display: "swap",
+});
 
 const containerVariants: Variants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.12, when: "beforeChildren" } },
+  visible: {
+    transition: {
+      staggerChildren: 0.12,
+      when: "beforeChildren",
+    },
+  },
 };
 
 const itemFadeUp: Variants = {
   hidden: { opacity: 0, y: 14 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.25, 0.1, 0.25, 1],
+    },
+  },
 };
 
 export default function PublicationsHero() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section
+      className={`relative min-h-screen flex items-center overflow-hidden ${josefin.className}`}
+    >
       <div
         className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat bg-scroll md:bg-fixed"
         style={{ backgroundImage: "url('/pub.jpg')" }}
@@ -34,17 +55,18 @@ export default function PublicationsHero() {
             variants={itemFadeUp}
           >
             <motion.h1
-              className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold text-gray-900 leading-tight"
+              className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-[200] text-gray-900 leading-tight uppercase tracking-[0.18em]"
               variants={itemFadeUp}
             >
               Publications
             </motion.h1>
 
             <motion.p
-              className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl text-gray-700 leading-relaxed font-light max-w-md lg:max-w-lg mt-58 sm:mt-6 md:mt-16 lg:mt-32 xl:mt-40"
+              className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl text-gray-700 leading-relaxed font-[300] max-w-md lg:max-w-lg mt-58 sm:mt-6 md:mt-16 lg:mt-32 xl:mt-40 tracking-[0.045em]"
               variants={itemFadeUp}
             >
-              Explore my collection of insightful blogs tailored to inspire, inform, and match your interests
+              Explore my collection of insightful blogs tailored to inspire,
+              inform, and match your interests
             </motion.p>
           </motion.div>
 
@@ -55,10 +77,24 @@ export default function PublicationsHero() {
       <div className="absolute bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 z-10">
         <motion.div
           animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
         >
-          <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          <svg
+            className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+            />
           </svg>
         </motion.div>
       </div>
